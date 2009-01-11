@@ -21,7 +21,8 @@
 <body>
   <div class="toolbar">
     <h1 id="pageTitle"><%= h title %></h1>
-      <a class="button" onClick="location.href = '<%= url_for(:controller => "/platform", :action => :logout) %>';"><%= _('ログアウト') %></a>
+    <a id="backButton" class="button" href="#" />
+    <a class="button" onClick="location.href = '<%= url_for(:controller => "/platform", :action => :logout) %>';"><%= _('ログアウト') %></a>
   </div>
   <%= yield %>
 </body>

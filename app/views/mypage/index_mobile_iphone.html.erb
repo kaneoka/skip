@@ -1,1 +1,12 @@
-まいぺーじだよう
+<ul id="main_menu" title="<%= _('メイン') %>" selected="true">
+  <li><a href="#antenna"><%= _('アンテナ') %></li>
+</ul>
+
+<ul id="antenna" title="<%= _('アンテナ') %>">
+<% @system_antennas.each do |antenna| -%>
+<li><%= link_to(h("#{antenna.name}(#{antenna.count})"), :action => "index", :antenna_type => antenna.antenna_type) %></li>
+<% end -%>
+<% @my_antennas.each do |antenna| -%>
+<li><%= link_to(h("#{antenna.name}(#{antenna.count})"), :action => "index", :antenna_id => antenna.id) %></li>
+<% end -%>
+</ul>
