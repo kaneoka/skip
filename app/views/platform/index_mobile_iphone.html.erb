@@ -6,19 +6,18 @@
   <meta http-equiv="Content-Script-Type" content="text/javascript" />
   <meta name="viewport" content="width=320, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0, minimum-scale=1.0, " />
   <link rel="shortcut icon" href="<%= controller.request.relative_url_root %>/favicon.ico" />
-  <title><%= h Admin::Setting.abbr_app_title %><%= h(" - #{@title}") if @title %></title>
+  <% title = @title ? "#{Admin::Setting.abbr_app_title} - #{@title}" : Admin::Setting.abbr_app_title %>
+  <title><%= h title %></title>
 
-  <%#= stylesheet_link_tag("skins/#{session[:user_custom_theme]}/skin.css") %>
-  <%#= stylesheet_link_tag("sprites/sprite.css") %>
   <%= stylesheet_link_tag("iui.css") %>
-  <%= all_javascript_include_tag 'jquery' %>
-  <script type="text/javascript">$j = jQuery.noConflict();</script>
-  <%= javascript_include_tag 'application' %>
-  <%= skip_javascript_include_tag 'skip_util' %>
 </head>
 <body>
+  <div class="toolbar">
+    <h1 id="pageTitle"><%= h title %></h1>
+  </div>
+
   <% form_tag({:controller => :platform, :action => :login, :only_path => false}, :id => 'login_form', :class => 'panel', :selected => 'true') do %>
-    <h2>User</h2>
+    <h2><%= _('ログイン情報を入力して下さい。') %></h2>
     <fieldset>
       <div class="row">
         <label for="login_key"><%= h Admin::Setting.login_account %></label>

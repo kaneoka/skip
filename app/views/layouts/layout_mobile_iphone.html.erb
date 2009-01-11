@@ -6,7 +6,8 @@
   <meta http-equiv="Content-Script-Type" content="text/javascript" />
   <meta name="viewport" content="width=320, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0, minimum-scale=1.0, " />
   <link rel="shortcut icon" href="<%= controller.request.relative_url_root %>/favicon.ico" />
-  <title><%= h Admin::Setting.abbr_app_title %><%= h(" - #{@title}") if @title %></title>
+  <% title = @title ? "#{Admin::Setting.abbr_app_title} - #{@title}" : Admin::Setting.abbr_app_title %>
+  <title><%= h title %></title>
 
   <%#= stylesheet_link_tag("skins/#{session[:user_custom_theme]}/skin.css") %>
   <%#= stylesheet_link_tag("sprites/sprite.css") %>
@@ -15,8 +16,13 @@
   <script type="text/javascript">$j = jQuery.noConflict();</script>
   <%= javascript_include_tag 'application' %>
   <%= skip_javascript_include_tag 'skip_util' %>
+  <%= javascript_include_tag 'iui' %>
 </head>
 <body>
+  <div class="toolbar">
+    <h1 id="pageTitle"><%= h title %></h1>
+      <a class="button" onClick="location.href = '<%= url_for(:controller => "/platform", :action => :logout) %>';"><%= _('ログアウト') %></a>
+  </div>
   <%= yield %>
 </body>
 </html>
