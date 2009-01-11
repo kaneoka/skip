@@ -1,12 +1,26 @@
-<ul id="main_menu" title="<%= _('メイン') %>" selected="true">
-  <li><a href="#antenna"><%= _('アンテナ') %></li>
-</ul>
+<%#TODO PC版でのマイページ右側の切り替えが全部同じaction(index)になってる…なんとかしないと %>
+<% if params[:antenna_type] || params[:antenna_id] -%>
+  <ul id="system_antenna" title="<%= @locals[:title_name] %>" selected="true">
+  <% @locals[:entries].each do |entry| -%>
+    <% entry_infos = get_entry_infos(entry) -%>
+    <li>
+      <% categories = entry.category.scan(/\[[^\]]*\]/) -%>
+      <%= link_to "#{entry.title}", entry.get_url_hash %>
+      <span style="font-size:8px; vertical-align: bottom; color: #808080;"><%= "#{entry_infos} - #{h(entry.user.name)}" %></span>
+    </li>
+  <% end -%>
+  </ul>
+<% else -%>
+  <ul id="main_menu" title="<%= _('メイン') %>" selected="true">
+    <li><a href="#antenna"><%= _('アンテナ') %></li>
+  </ul>
 
-<ul id="antenna" title="<%= _('アンテナ') %>">
-<% @system_antennas.each do |antenna| -%>
-<li><%= link_to(h("#{antenna.name}(#{antenna.count})"), :action => "index", :antenna_type => antenna.antenna_type) %></li>
+  <ul id="antenna" title="<%= _('アンテナ') %>">
+  <% @system_antennas.each do |antenna| -%>
+  <li><%= link_to(h("#{antenna.name}(#{antenna.count})"), :action => "index", :antenna_type => antenna.antenna_type) %></li>
+  <% end -%>
+  <% @my_antennas.each do |antenna| -%>
+  <li><%= link_to(h("#{antenna.name}(#{antenna.count})"), :action => "index", :antenna_id => antenna.id) %></li>
+  <% end -%>
+  </ul>
 <% end -%>
-<% @my_antennas.each do |antenna| -%>
-<li><%= link_to(h("#{antenna.name}(#{antenna.count})"), :action => "index", :antenna_id => antenna.id) %></li>
-<% end -%>
-</ul>

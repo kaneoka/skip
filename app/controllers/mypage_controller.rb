@@ -58,8 +58,10 @@ class MypageController < ApplicationController
       @partial, @locals = get_index_day(@year, @month, @day)
     elsif antenna_type = params[:antenna_type]
       @partial, @locals = get_index_antenna_system(antenna_type)
+      render :layout => false if !request.mobile.nil? && request.mobile.iphone?
     elsif antenna_id = params[:antenna_id]
       @partial, @locals = get_index_antenna(antenna_id)
+      render :layout => false if !request.mobile.nil? && request.mobile.iphone?
     elsif list_type = params[:list_type]
       options = {:per_page => 20}
       @partial, @locals = "index_list", find_as_locals(list_type, options)
