@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <meta name="viewport" content="width=320, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0, minimum-scale=1.0, " />
+  <link rel="shortcut icon" href="<%= controller.request.relative_url_root %>/favicon.ico" />
+  <title><%= h Admin::Setting.abbr_app_title %><%= h(" - #{@title}") if @title %></title>
+
+  <%#= stylesheet_link_tag("skins/#{session[:user_custom_theme]}/skin.css") %>
+  <%#= stylesheet_link_tag("sprites/sprite.css") %>
+  <%= stylesheet_link_tag("iui.css") %>
+  <%= all_javascript_include_tag 'jquery' %>
+  <script type="text/javascript">$j = jQuery.noConflict();</script>
+  <%= javascript_include_tag 'application' %>
+  <%= skip_javascript_include_tag 'skip_util' %>
+</head>
+<body>
+  <%= yield %>
+</body>
+</html>
+
