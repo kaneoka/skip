@@ -109,6 +109,7 @@ class UserController < ApplicationController
       else
         flash.now[:notice] = options[:id] ? '閲覧権限がありません。' : '現在投稿がありません。'
       end
+      render :layout => false if !request.mobile.nil? && request.mobile.iphone?
     end
   end
 
