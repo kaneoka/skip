@@ -9,8 +9,8 @@
   <% title = @title ? "#{Admin::Setting.abbr_app_title} - #{@title}" : Admin::Setting.abbr_app_title %>
   <title><%= h title %></title>
 
-  <%#= stylesheet_link_tag("skins/#{session[:user_custom_theme]}/skin.css") %>
-  <%#= stylesheet_link_tag("sprites/sprite.css") %>
+  <%= all_stylesheet_link_tag "style" -%>
+  <%= stylesheet_link_tag("sprites/sprite.css") %>
   <%= stylesheet_link_tag("iui.css") %>
   <%= all_javascript_include_tag 'jquery' %>
   <script type="text/javascript">$j = jQuery.noConflict();</script>

@@ -1,36 +1,35 @@
 <%#TODO PC版でのマイページ右側の切り替えが全部同じaction(index)になってる…なんとかしないと %>
 <% if params[:antenna_type] || params[:antenna_id] -%>
-  <ul id="system_antenna" title="<%= @locals[:title_name] %>" selected="true">
-  <% @locals[:entries].each do |entry| -%>
-    <li>
-      <%= link_to "#{entry.title}", entry.get_url_hash %>
-      <% entry_infos = get_entry_infos(entry) -%>
-      <span style="font-size:8px; vertical-align: bottom; color: #808080;"><%= "#{entry_infos} - #{h(entry.user.name)}" %></span>
-    </li>
-  <% end -%>
-  </ul>
+<ul id="system_antenna" title="<%= @locals[:title_name] %>" selected="true">
+  <%= render :partial => 'entries_mobile_iphone', :locals => {:entries => @locals[:entries]} %>
+</ul>
 <% else -%>
-  <ul id="main_menu" title="<%= _('メイン') %>" selected="true">
-    <li><a href="#antenna"><%= _('アンテナ') %></li>
-    <li><a href="#popular_entry"><%= _('最近の人気記事') %></li>
-  </ul>
+<ul id="main_menu" title="<%= _('メイン') %>" selected="true">
+  <li class="group"><%= _('アンテナ') %></a></li>
+  <% @system_antennas.each do |antenna| -%>
+  <li><%= link_to(h("#{antenna.name}(#{antenna.count})"), :action => "index", :antenna_type => antenna.antenna_type) %></li>
+  <% end -%>
+  <% @my_antennas.each do |antenna| -%>
+  <li><%= link_to(h("#{antenna.name}(#{antenna.count})"), :action => "index", :antenna_id => antenna.id) %></li>
+  <% end -%>
+  <li class="group"><%= _('公開された記事') %></li>
+  <li><a href="#access_blogs"><%= _('最近の人気記事') %></a></li>
+  <li><a href="#recent_blogs"><%= _('ユーザ') %></a></li>
+  <li class="group"><%= _('グループカテゴリ毎の公開された記事') %></li>
+  <% @locals[:recent_bbs].each do |bbs| -%>
+  <li><a href="#<%= bbs[:id_name] %>"><%= bbs[:title_name] %></a></li>
+  <% end -%>
+</ul>
 
-  <ul id="antenna" title="<%= _('アンテナ') %>">
-    <% @system_antennas.each do |antenna| -%>
-    <li><%= link_to(h("#{antenna.name}(#{antenna.count})"), :action => "index", :antenna_type => antenna.antenna_type) %></li>
-    <% end -%>
-    <% @my_antennas.each do |antenna| -%>
-    <li><%= link_to(h("#{antenna.name}(#{antenna.count})"), :action => "index", :antenna_id => antenna.id) %></li>
-    <% end -%>
-  </ul>
-
-  <ul id="popular_entry" title="<%= _('最近の人気記事') %>">
-    <% @locals[:recent_blogs][:pages].each do |entry| -%>
-      <li>
-        <%= link_to "#{entry.title}", entry.get_url_hash %>
-        <% entry_infos = get_entry_infos(entry) -%>
-        <span style="font-size:8px; vertical-align: bottom; color: #808080;"><%= "#{entry_infos} - #{h(entry.user.name)}" %></span>
-      </li>
-    <% end -%>
-  </ul>
+<ul id="access_blogs" title="<%= _('最近の人気記事') %>">
+  <%= render :partial => 'entries_mobile_iphone', :locals => {:entries => @locals[:access_blogs][:pages]} %>
+</ul>
+<ul id="recent_blogs" title="<%= _('ユーザ') %>">
+  <%= render :partial => 'entries_mobile_iphone', :locals => {:entries => @locals[:recent_blogs][:pages]} %>
+</ul>
+  <% @locals[:recent_bbs].each do |bbs| -%>
+<ul id="<%= bbs[:id_name] %>" title="<%= bbs[:title_name] %>">
+  <%= render :partial => 'entries_mobile_iphone', :locals => {:entries => bbs[:pages]} %>
+</ul>
+  <% end -%>
 <% end -%>

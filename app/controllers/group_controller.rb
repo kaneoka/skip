@@ -109,7 +109,7 @@ class GroupController < ApplicationController
                                   :conditions => find_params[:conditions],
                                   :include => find_params[:include] | [ :user, :board_entry_comments, :state ])
     end
-
+    render :layout => false if !request.mobile.nil? && request.mobile.iphone?
   end
 
   # tab_menu
