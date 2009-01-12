@@ -1,6 +1,6 @@
 <% entries.each do |entry| -%>
   <li>
-    <%= link_to "#{entry.title}", entry.get_url_hash %>
+    <%= link_to "#{h(entry.title)}", entry.get_url_hash %>
     <% entry_infos = get_entry_infos(entry) -%>
     <span style="font-size:8px; vertical-align: bottom; color: #808080;"><%= "#{entry_infos} - #{h(entry.user.name)}" %></span>
   </li>

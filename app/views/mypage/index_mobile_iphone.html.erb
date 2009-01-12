@@ -5,7 +5,7 @@
 </ul>
 <% else -%>
 <ul id="main_menu" title="<%= _('メイン') %>" selected="true">
-  <li class="group"><%= _('アンテナ') %></a></li>
+  <li class="group"><%= _('アンテナ') %></li>
   <% @system_antennas.each do |antenna| -%>
   <li><%= link_to(h("#{antenna.name}(#{antenna.count})"), :action => "index", :antenna_type => antenna.antenna_type) %></li>
   <% end -%>
