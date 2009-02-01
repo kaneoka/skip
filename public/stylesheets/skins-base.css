@@ -105,3 +105,39 @@ div#tab_body {
   _width: 100%;
 }
 /* ----------------------------------- */
+div#mainmenu a, div#mainmenu a:visited {
+  color: blue;
+  font-weight: bold;
+}
+
+div#mainmenu {
+  border-left: 1px solid silver;
+  height: 30px;
+  padding: 0px 0px;
+}
+ul.submenu {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+ul.submenu li {
+  list-style: none;
+  padding: 7px 10px;
+  float: left;
+  border-top: 1px solid silver;
+  border-right: 1px solid silver;
+  text-align: center;
+}
+
+ul.submenu a, ul.submenu a:link, ul.submenu a:visited {
+  text-decoration: none;
+  width: 100px;
+  height: auto;
+  padding: 2px 0px;
+}
+div#event_panel {
+  border: 1px solid silver;
+  width: auto;
+  padding: 10px 3px;
+}
+/* ----------------------------------- */

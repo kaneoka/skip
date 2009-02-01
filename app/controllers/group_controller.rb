@@ -563,11 +563,11 @@ class GroupController < ApplicationController
 
   # キャンセル(締め切り後)
   def event_cancel
-    change_attend_state(params[:user_id], params[:event_date_id], false)
+    change_attend_state(params[:user_id], params[:event_date_id], false,params[:eid])
 
     flash[:notice] = "キャンセルしました。"
+    redirect_to :action => "event", :menu => "event_show", :eid => params[:eid]
   end
-
 
   # 管理者に設定する
   # ［操作可能］管理者のみ
@@ -588,7 +588,7 @@ class GroupController < ApplicationController
   end
 
   # 出席欠席状況の変更
-  def change_attend_state(eid, user_id, event_date_id, state)
+  def change_attend_state(user_id, event_date_id, state, eid)
     @event = Event.find_by_eid(eid)
     if event_attendee = EventAttendee.find_by_user_id_and_event_date_id(user_id, event_date_id)
       event_attendee.update_attributes(:state => state) unless event_attendee.state == state
@@ -625,13 +625,13 @@ class GroupController < ApplicationController
 
   # 出席
   def attend
-    event_attendee = change_attend_state(params[:eid], params[:user_id], params[:event_date_id], true)
+    event_attendee = change_attend_state(params[:user_id], params[:event_date_id], true, params[:eid])
     render_attendee(event_attendee, params[:only_icon])
   end
 
   # 欠席
   def absence
-    event_attendee = change_attend_state(params[:eid], params[:user_id], params[:event_date_id], false)
+    event_attendee = change_attend_state(params[:user_id], params[:event_date_id], false, params[:eid])
     render_attendee(event_attendee, params[:only_icon])
   end
 

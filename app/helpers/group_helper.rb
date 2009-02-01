@@ -38,8 +38,8 @@ module GroupHelper
 
   def generate_event_visitor_state event, participation, owner, user_id
     state = "<div style='font-weight:bold;color:blue;background-color:#f0f0ff;margin-bottom:5px;'>"
-    if event.finished?
-      return state << '終了しました</div>', ""
+    if event.past_event?
+      return state << '過去のイベントです</div>', ""
     end
 
     if event.acceptable
@@ -58,12 +58,9 @@ module GroupHelper
 
   def generate_event_informations event, participation, owner
     informations = []
-
-    if event.finished?
-      return informations << icon_tag('bullet_red') + 'このイベントは終了しています'
-    end
-    if participation && owner && event.should_close_event?
-      return informations << icon_tag('bullet_red') + 'イベントを終了するか、候補日を追加してイベント日程を調整しなおしてください<br/>　　' + link_to(" 【イベントを終了する】", { :action => 'event_close', :eid => event.eid, :message => '終了しました'}, :confirm => '本当に終了しますか？', :method => :post)
+    
+    if event.past_event?
+      return informations << icon_tag('bullet_red') + 'このイベントは過去に開催されました'
     end
     if participation == nil and event.acceptable
       informations << icon_tag('key') + "このイベントは参加するには事前にグループへの参加が必須です。"
@@ -125,7 +122,7 @@ module GroupHelper
       menu << "<a href=\"#\" id=\"absentee_link_#{options[:event].eid}_#{options[:date].id}_#{options[:user_id]}\" class=\"absentee_link\" >[欠席]</a>"
     else
       if options[:attendee] and options[:attendee].state
-        menu << link_to("[キャンセル]", { :action => :event_cancel, :event_date_id => options[:date].id, :user_id => options[:user_id] },
+        menu << link_to("[キャンセル]", { :action => :event_cancel, :eid => options[:event].eid, :event_date_id => options[:date].id, :user_id => options[:user_id] },
                                           :method => :post, :confirm => "本当にキャンセルしますか？")
       end
     end

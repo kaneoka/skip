@@ -48,15 +48,6 @@ class Event < ActiveRecord::Base
     event_fixed_date.event_date.start_time.to_date
   end
 
-  def finished?(current_date = Time.now)
-    result = false
-    unless acceptable
-      result = true if event_fixed_date and event_fixed_date.event_date.end_time < current_date
-      result = true unless event_fixed_date
-    end
-    return result
-  end
-
   def participation? user_id
     group = Group.find_by_gid(self.gid)
     result = false
@@ -64,14 +55,14 @@ class Event < ActiveRecord::Base
     return result
   end
 
-  def should_close_event?(current_date = Time.now)
+  def past_event?(current_date = Time.now)
     result = false
-    if acceptable
-      if event_dates.map{|date| date.end_time}.max < current_date
-        result = true
-      end
+    if event_fixed_date
+      result = true if event_fixed_date.event_date.end_time < current_date
+    else
+      result = true if event_dates.map{|date| date.end_time}.max < current_date
     end
-      return result
+    return result
   end
 
   def symbol_id

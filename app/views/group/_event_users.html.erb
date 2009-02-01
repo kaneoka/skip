@@ -1,5 +1,15 @@
 <div id="contents_container">
 
+    <div id="mainmenu">
+      <ul class="submenu">
+	<% get_events_menu_items(@menu).each do |menu_item| %>
+	<li class="menu"><%= menu_item -%></li>
+	<% end %>
+      </ul>
+    </div>
+
+  <div id="event_panel">
+
     <div style="width: 98%;">
       <h1 id="title"><%=h @event.name %></h1>
     </div>
@@ -92,7 +102,7 @@
 
 <div id="contents_bottom">
 </div><!-- contents_bottom -->
-
+</div><!-- event_panel -->
 </div><!-- contents_container -->
 
 <script type="text/javascript">

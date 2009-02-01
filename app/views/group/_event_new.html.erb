@@ -2,23 +2,15 @@
 
 <div id="contents_container">
 
-  <div id="contents_left">
+    <div id="mainmenu">
+      <ul class="submenu">
+	<% get_events_menu_items(@menu).each do |menu_item| %>
+	<li class="menu"><%= menu_item -%></li>
+	<% end %>
+      </ul>
+    </div>
 
-    <div class="box_space">
-      <div class="box_space_title">メニュー</div>
-      <div class="box_space_body">
-        <ul>
-          <% get_events_menu_items(@menu).each do |menu_item| %>
-          <li><%= menu_item -%></li>
-          <% end %>
-        </ul>
-      </div>
-      <div class="box_space_bottom"></div>
-    </div><!-- box_space -->
-
-  </div><!-- contents_left -->
-
-  <div id="contents_right">
+  <div id="event_panel">
 
     <% form_tag({:action => "event_create" }, :id=>'event_form') do -%>
 
@@ -75,11 +67,9 @@
 
     <% end %>
 
-  </div><!-- contents_right -->
-
   <div id="contents_bottom">
   </div><!-- contents_bottom -->
-
+</div>
 </div><!-- contents_container -->
 
 <div id="dates_template" style="display:none;">

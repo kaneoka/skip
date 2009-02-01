@@ -1,5 +1,15 @@
 <div id="contents_container">
 
+    <div id="mainmenu">
+      <ul class="submenu">
+	<% get_events_menu_items(@menu).each do |menu_item| %>
+	<li class="menu"><%= menu_item -%></li>
+	<% end %>
+      </ul>
+    </div>
+
+  <div id="event_panel">
+
   <div style="width: 98%;">
     <h1 id="title"><%=h @event.name %></h1>
   </div>
@@ -29,29 +39,6 @@
       <div class="box_space_bottom"></div>
       <% end %>
 
-    </div><!-- box_space -->
-
-    <div class="box_space">
-      <div class="box_space_title"><%= icon_tag('user_suit') -%>管理者</div>
-      <div class="box_space_body">
-        <ul>
-          <% @admin_users.each do |user| %>
-          <li><%= user_link_to user %></li>
-          <% end %>
-        </ul>
-      </div>
-      <div class="box_space_bottom"></div>
-    </div><!-- box_space -->
-
-    <div class="box_space">
-      <div class="box_space_title"><%= icon_tag('group') -%>参加者</div>
-      <div class="box_space_body">
-        <ul>
-          <% @users.each do |user| %>
-          <li><%= user_link_to user %></li>
-          <% end %>
-        </ul>
-      </div>
     </div><!-- box_space -->
 
   </div><!-- contents_left -->
@@ -84,8 +71,14 @@
 
         <table class="event_box" border="1" style="width: 90%;">
           <tr>
-            <th>タイトル</th>
-            <td><%= @event.name %></td>
+            <th>幹事</th>
+            <td>
+              <ul>
+		<% @admin_users.each do |user| %>
+		<li><%= user_link_to user %></li>
+		<% end %>
+              </ul>
+	    </td>
           </tr>
           <% if @event.event_fixed_date %>
           <tr>
@@ -123,7 +116,7 @@
           <p><%= submit_tag '追加' %>　<input id="cancel_button" type="button" value="キャンセル"/></p>
           <% end -%>
         </div>
-        <% if @participation and not @event.finished? %>
+        <% if @participation %>
         <div id="append_date_menu" style="border: 1px dashed silver; margin-top: 5px; padding: 5px; ">
           <%= generate_date_menu(@event, @participation, @owner) -%>
         </div>
@@ -134,7 +127,7 @@
   </div><!--summary_right-->
 
 </div><!-- contents_right -->
-
+</div><!-- event_panel -->
 </div><!-- summary_container -->
 
 <%= skip_jquery_include_tag "jquery.inplace" %>
