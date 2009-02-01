@@ -78,7 +78,7 @@ module GroupHelper
     get_menu_items @@menus, selected_menu, "event"
   end
 
-  def get_event_menu_items selected_menu, eid
+  def get_event_menu_items selected_menu, event_id
     menus = [{:name => "イベントサマリ", :menu => "event_show" },
              {:name => "イベント参加者", :menu => "event_users" },
              {:name => "出席情報", :menu => "event_attendance" }]
@@ -88,14 +88,14 @@ module GroupHelper
       if menu[:menu] == selected_menu
         menu_items << icon_tag('bullet_red') + "<b>#{menu[:name]}</b>"
       else
-        link_to_params = { :action => "event", :menu => menu[:menu], :eid => eid }
+        link_to_params = { :action => "event", :menu => menu[:menu], :event_id => event_id }
         menu_items << icon_tag('bullet_blue') + link_to(menu[:name], link_to_params, :confirm => menu[:confirm])
       end
     end
     menu_items
   end
 
-  def get_event_manage_menu_items selected_menu, eid
+  def get_event_manage_menu_items selected_menu, event_id
     menus = [{:name => "イベントの編集", :menu => "event_edit" } ]
 
     menu_items = []
@@ -103,7 +103,7 @@ module GroupHelper
       if menu[:menu] == selected_menu
         menu_items << icon_tag('bullet_red') + "<b>#{menu[:name]}</b>"
       else
-        link_to_params = { :action => "event", :menu => menu[:menu], :eid => eid }
+        link_to_params = { :action => "event", :menu => menu[:menu], :event_id => event_id }
         menu_items << icon_tag('bullet_blue') + link_to(menu[:name], link_to_params, :confirm => menu[:confirm])
       end
     end
@@ -117,11 +117,11 @@ module GroupHelper
     options.assert_valid_keys [:event, :date, :attendee, :user_id, :owner]
     menu = ""
     if options[:event].acceptable || options[:owner]
-      menu << "<a href=\"#\" id=\"attendee_link_#{options[:event].eid}_#{options[:date].id}_#{options[:user_id]}\" class=\"attendee_link\" >[出席]</a>"
-      menu << "<a href=\"#\" id=\"absentee_link_#{options[:event].eid}_#{options[:date].id}_#{options[:user_id]}\" class=\"absentee_link\" >[欠席]</a>"
+      menu << "<a href=\"#\" id=\"attendee_link_#{options[:event].id}_#{options[:date].id}_#{options[:user_id]}\" class=\"attendee_link\" >[出席]</a>"
+      menu << "<a href=\"#\" id=\"absentee_link_#{options[:event].id}_#{options[:date].id}_#{options[:user_id]}\" class=\"absentee_link\" >[欠席]</a>"
     else
       if options[:attendee] and options[:attendee].state == "attend"
-        menu << link_to("[キャンセル]", { :action => :event_cancel, :eid => options[:event].eid, :event_date_id => options[:date].id, :user_id => options[:user_id] },
+        menu << link_to("[キャンセル]", { :action => :event_cancel, :event_id => options[:event].id, :event_date_id => options[:date].id, :user_id => options[:user_id] },
                                           :method => :post, :confirm => "本当にキャンセルしますか？")
       end
     end
@@ -134,9 +134,9 @@ module GroupHelper
     if fixed_date? event, date
       output = "開催日です"
     elsif event.acceptable and owned
-      output << link_to("[確定]", {:action => :fix_date, :eid => event.eid, :event_date_id => date.id},
+      output << link_to("[確定]", {:action => :fix_date, :event_id => event.id, :event_date_id => date.id},
                                   :confirm => "本当に確定しますか？", :method => :post) if date.start_time > Time.now
-      output << link_to("[削除]", {:action => :delete_date, :eid => event.eid, :event_date_id => date.id},
+      output << link_to("[削除]", {:action => :delete_date, :event_id => event.id, :event_date_id => date.id},
                                   :confirm => "本当に削除しますか？", :method => :post) if event.event_dates.size > 1
      end
     output
@@ -165,10 +165,10 @@ module GroupHelper
     if event.acceptable # 締切前
         menus << '<a id="append_date_link" href="#">[候補日の追加]</a>'
       if event.date_fixed? # 確定後
-        menus << link_to("[締切]", {:action => 'event_close', :eid => event.eid}, :confirm => "イベントを締め切ります。よろしいですか？")
+        menus << link_to("[締切]", {:action => 'event_close', :event_id => event.id}, :confirm => "イベントを締め切ります。よろしいですか？")
       end
     else
-      menus << link_to("[締切解除]", {:action => 'event_unclose', :eid => event.eid}, :confirm => "イベントの締め切りを解除しますが、よろしいですか？")
+      menus << link_to("[締切解除]", {:action => 'event_unclose', :event_id => event.id}, :confirm => "イベントの締め切りを解除しますが、よろしいですか？")
     end
     menus
   end

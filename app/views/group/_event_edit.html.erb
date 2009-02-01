@@ -19,7 +19,7 @@
       <div class="box_space_title">メニュー</div>
       <div class="box_space_body">
         <ul>
-          <% get_event_menu_items(@menu,@event.eid).each do |menu_item| %>
+          <% get_event_menu_items(@menu,@event.id).each do |menu_item| %>
           <li><%= menu_item -%></li>
           <% end %>
         </ul>
@@ -30,7 +30,7 @@
       <div class="box_space_title">幹事メニュー</div>
       <div class="box_space_body">
         <ul>
-          <% get_event_manage_menu_items(@menu,@event.eid).each do |menu_item| %>
+          <% get_event_manage_menu_items(@menu,@event.id).each do |menu_item| %>
           <li><%= menu_item -%></li>
           <% end %>
         </ul>
@@ -44,13 +44,8 @@
 
   <div id="contents_right">
 
-  <% form_tag({:action => :event_update, :eid => @event.eid}) do -%>
+  <% form_tag({:action => :event_update, :event_id => @event.id}) do -%>
   <%= template_error_messages_for 'event' %>
-
-  <div class="input_line">
-    <div class="input_label">イベントID</div>
-    <div class="input_value"><%= @event.eid -%></div>
-  </div>
 
   <div class="input_line">
     <div class="input_label">名称</div>

@@ -20,7 +20,7 @@
       <div class="box_space_title">メニュー</div>
       <div class="box_space_body">
         <ul>
-          <% get_event_menu_items(@menu,@event.eid).each do |menu_item| %>
+          <% get_event_menu_items(@menu,@event.id).each do |menu_item| %>
           <li><%= menu_item -%></li>
           <% end %>
         </ul>
@@ -31,7 +31,7 @@
       <div class="box_space_title">幹事メニュー</div>
       <div class="box_space_body">
         <ul>
-          <% get_event_manage_menu_items(@menu,@event.eid).each do |menu_item| %>
+          <% get_event_manage_menu_items(@menu,@event.id).each do |menu_item| %>
           <li><%= menu_item -%></li>
           <% end %>
         </ul>
@@ -47,7 +47,7 @@
 <div class="search_cond_space">
   <% form_tag({:action => "event" }, :method => 'get') do -%>
   <%= hidden_field_tag("menu","event_users") -%>
-  <%= hidden_field_tag("eid", @event.eid) -%>
+  <%= hidden_field_tag("event_id", @event.id) -%>
 <table class="search_cond_box">
   <tr>
     <th>検索条件</th>

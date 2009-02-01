@@ -20,7 +20,7 @@
       <div class="box_space_title">メニュー</div>
       <div class="box_space_body">
         <ul>
-          <% get_event_menu_items(@menu,@event.eid).each do |menu_item| %>
+          <% get_event_menu_items(@menu,@event.id).each do |menu_item| %>
           <li><%= menu_item -%></li>
           <% end %>
         </ul>
@@ -31,7 +31,7 @@
       <div class="box_space_title">幹事メニュー</div>
       <div class="box_space_body">
         <ul>
-          <% get_event_manage_menu_items(@menu,@event.eid).each do |menu_item| %>
+          <% get_event_manage_menu_items(@menu,@event.id).each do |menu_item| %>
           <li><%= menu_item -%></li>
           <% end %>
         </ul>
@@ -108,7 +108,7 @@
         <div id="append_date_space" style="border: 1px dashed silver; margin-top: 5px; padding: 5px; display: none;">
           <div style="margin-bottom:5px">
             <% form_tag(:action => 'append_date') do -%>
-            <%= hidden_field("event","eid") -%>
+            <%= hidden_field("event","id") -%>
             開始時刻：<%= select_datetime  Time.now, { :prefix => 'date[start_time]',  :use_month_numbers => true, :minute_step => 15} -%><br/>
             終了時刻：<%= select_datetime  Time.now + (60*60), { :prefix => 'date[end_time]',  :use_month_numbers => true, :minute_step => 15} -%><br/>
           </div>

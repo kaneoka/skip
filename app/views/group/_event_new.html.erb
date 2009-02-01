@@ -15,14 +15,6 @@
     <% form_tag({:action => "event_create" }, :id=>'event_form') do -%>
 
     <div class="input_line">
-      <div class="input_label">イベントID</div>
-      <div class="input_value">
-        <%= text_field 'event', 'eid', :size =>60 -%>
-      </div>
-      <div style="font-size:10px">
-        ※イベントIDは4文字以上で、数字orアルファベットor記号(ハイフン「-」 アンダーバー「_」)で入力してください。<br/>
-        ※イベントIDはのポータル内でイベントを識別する文字列としていろいろな場面で使いますので、分かりやすい文字列を選んでください。
-      </div>
       <div class="input_line">
         <div class="input_label">名称</div>
         <div class="input_value"><%= text_field 'event', 'name', :size =>60 %></div>

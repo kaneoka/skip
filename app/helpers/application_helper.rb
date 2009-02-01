@@ -364,7 +364,7 @@ private
     output_text << icon_tag('flag_blue') if options[:image_on]
     output_text << (options[:view_text] || h(event.name))
 
-    link_to output_text, { :controller=>'group', :action=>'event', :menu => "event_show", :eid => event.eid}, options
+    link_to output_text, { :controller=>'group', :action=>'event', :menu => "event_show", :event_id => event.id}, options
   end
 
 end

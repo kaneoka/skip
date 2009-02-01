@@ -25,7 +25,6 @@ class CreateEventTable < ActiveRecord::Migration
       t.text     "description",                :default => "", :null => false
       t.text     "place",                      :default => "", :null => false
       t.string   "gid",                                        :null => false
-      t.string   "eid",         :limit => 100, :default => "", :null => false
       t.boolean  "acceptable",                                 :null => false
       t.string   "publication_symbol",         :default => "", :null => false
     end
@@ -36,8 +35,6 @@ class CreateEventTable < ActiveRecord::Migration
       t.integer  "event_id",                      :null => false
       t.integer  "user_id",                       :null => false
     end
-
-    add_index "events", ["eid"], :name => "index_events_on_eid", :unique => true
 
   end
 

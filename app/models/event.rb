@@ -7,19 +7,19 @@ class Event < ActiveRecord::Base
   has_many :event_owners, :dependent => :destroy
   has_many :group_participations
 
-  validates_presence_of :eid, :name ,:description, :place,
+  validates_presence_of :name ,:description, :place,
                         :message => 'は必須です'
 
   validates_length_of   :name, :maximum => 100, :message => 'は100桁以内で入力してください'
 
-  validates_uniqueness_of :eid, :message => 'は既に登録されています'
-  validates_length_of :eid, :minimum => 4, :message => 'は4文字以上で入力してください'
-  validates_length_of :eid, :maximum => 50, :message => 'は50文字以内で入力してください'
-  validates_format_of :eid, :message => 'は数字orアルファベットor記号(ハイフン「-」 アンダーバー「_」)で入力してください', :with => /^[a-zA-Z0-9\-_]*$/
+#   validates_uniqueness_of :eid, :message => 'は既に登録されています'
+#   validates_length_of :eid, :minimum => 4, :message => 'は4文字以上で入力してください'
+#   validates_length_of :eid, :maximum => 50, :message => 'は50文字以内で入力してください'
+#   validates_format_of :eid, :message => 'は数字orアルファベットor記号(ハイフン「-」 アンダーバー「_」)で入力してください', :with => /^[a-zA-Z0-9\-_]*$/
 
   class << self
     HUMANIZED_ATTRIBUTE_KEY_NAMES = {
-      "eid"  => "イベントID",
+#      "eid"  => "イベントID",
       "name" => "名前",
       "description" => "説明",
       "place" => "場所",
@@ -28,9 +28,9 @@ class Event < ActiveRecord::Base
     def human_attribute_name(attribute_key_name)
       HUMANIZED_ATTRIBUTE_KEY_NAMES[attribute_key_name] || super
     end
-    def symbol_type
-      :eid
-    end
+     def symbol_type
+       :gid
+     end
   end
 
   def holdingDatetime
@@ -99,9 +99,9 @@ class Event < ActiveRecord::Base
     end
   end
 
-  def symbol_id
-    eid
-  end
+   def symbol_id
+     gid
+   end
 
   def symbol
     self.class.symbol_type.to_s + ":" + symbol_id
