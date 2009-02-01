@@ -384,6 +384,10 @@ class GroupController < ApplicationController
       if @event = Event.find(params[:event_id])
         params[:publication_type] = @event.publication_symbol == 'sid:allusers' ? 'public' :'private'
       end
+
+      @owner = false
+      @owner = true if @event.event_owners.find_by_user_id(session[:user_id])
+
     when "event_show"
       if @event = Event.find(params[:event_id] )
         group = Group.find_by_gid(@event.gid)

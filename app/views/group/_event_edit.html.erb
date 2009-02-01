@@ -9,9 +9,6 @@
     </div>
 
   <div id="event_panel">
-    <div style="width: 98%;">
-      <h1 id="title"><%=h @event.name %></h1>
-    </div>
 
   <div id="contents_left">
 
@@ -39,6 +36,17 @@
       <% end %>
 
     </div><!-- box_space -->
+
+    <div class="box_space">
+      <div class="box_space_title"><%= icon_tag('information') -%><span>状態</span></div>
+      <div class="box_space_body">
+        <% state = generate_event_visitor_state(@event, @participation, @owner, session[:user_id]) -%>
+	<%= state -%>
+      </div>
+    </div>
+    <% if @participation && @owner %>
+    <%= generate_owner_menus(@event) -%>
+    <% end %>
 
   </div><!-- contents_left -->
 

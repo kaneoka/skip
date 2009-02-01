@@ -10,10 +10,6 @@
 
   <div id="event_panel">
 
-    <div style="width: 98%;">
-      <h1 id="title"><%=h @event.name %></h1>
-    </div>
-
   <div id="contents_left">
 
     <div class="box_space">
@@ -40,10 +36,25 @@
       <% end %>
     </div><!-- box_space -->
 
+    <div class="box_space">
+      <div class="box_space_title"><%= icon_tag('information') -%><span>状態</span></div>
+      <div class="box_space_body">
+        <% state = generate_event_visitor_state(@event, @participation, @owner, session[:user_id]) -%>
+	<%= state -%>
+      </div>
+    </div>
+    <% if @participation && @owner %>
+    <%= generate_owner_menus(@event) -%>
+    <% end %>
+
   </div><!-- contents_left -->
 
   <div id="contents_right">
 
+    <div class="input_line">
+      <h1 id="title" hight="10px"><%=h @event.name %></h1>
+    </div>
+    
 <div class="search_cond_space">
   <% form_tag({:action => "event" }, :method => 'get') do -%>
   <%= hidden_field_tag("menu","event_users") -%>
