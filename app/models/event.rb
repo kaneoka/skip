@@ -65,6 +65,15 @@ class Event < ActiveRecord::Base
     return result
   end
 
+  def fixed_date_or_last_candidate_date
+    if event_fixed_date
+      result = event_fixed_date.event_date.end_time
+    else
+      result = event_dates.map{|date| date.end_time}.max
+    end
+  end
+
+
   def symbol_id
     eid
   end
@@ -77,6 +86,14 @@ class Event < ActiveRecord::Base
     result = false
     self.event_owners.each { |owner| result = true if owner.user_id == user_id }
     result
+  end
+
+  def event_admin_users
+    admin_users = []
+    self.event_owners.each do |users|
+      admin_users << users.user.name 
+    end
+    admin_users.join(" ")
   end
 
 end

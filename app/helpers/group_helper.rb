@@ -50,7 +50,7 @@ module GroupHelper
     state << "</div>"
 
     if event.participation?(user_id)
-      state << (owner ? '管理者です！' : '参加中です！')
+      state << (owner ? '幹事です！' : '参加中です！')
     end
 
     return state
@@ -171,7 +171,7 @@ module GroupHelper
 
   def generate_date_menu event, participation, owner
     menu = ""
-    if participation && owner # 管理者
+    if participation && owner # 幹事
       menu << generate_owner_menus(event)
     else # 参加者
       if @event.acceptable # 締切前
@@ -184,7 +184,7 @@ module GroupHelper
   def user_state owner
     output = ""
     if owner
-      output << icon_tag('star') + '管理者'
+      output << icon_tag('star') + '幹事'
     else
       output << icon_tag('user') + '参加者'
     end

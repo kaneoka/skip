@@ -376,8 +376,8 @@ class GroupController < ApplicationController
                                  :per_page => 10,
                                  :conditions => ["gid = ?",@group.gid],
                                  :conditions => ["gid = ? and event_publications.symbol in (?)",@group.gid,condition_params],
-                                 :order => 'events.id desc',
-                                 :include => 'event_publication')
+                                 :order => 'event_dates.end_time desc',
+                                 :include => ['event_publication','event_dates','event_fixed_date'])
       unless @events && @events.size > 0
         flash.now[:notice] = 'イベントはありませんでした。'
       end

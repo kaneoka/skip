@@ -27,7 +27,7 @@
       <div class="box_space_bottom"></div>
 
       <% if @event.owner?(session[:user_id]) %>
-      <div class="box_space_title">管理者メニュー</div>
+      <div class="box_space_title">幹事メニュー</div>
       <div class="box_space_body">
         <ul>
           <% get_event_manage_menu_items(@menu,@event.eid).each do |menu_item| %>
