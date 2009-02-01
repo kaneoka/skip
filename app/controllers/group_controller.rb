@@ -462,58 +462,7 @@ class GroupController < ApplicationController
 
       @owner = false
       @owner = true if @event.event_owners.find_by_user_id(session[:user_id])
-
-#     when "event_attendance"
-#       @event = Event.find(params[:event_id])
-#       group = Group.find_by_gid(@event.gid)
-      
-#       params[:date] ||=  ""
-#       params[:include_absentee] ||= "participation"
-
-#       conditions = ["group_id = ? ",@group.id]
-      
-#       unless params[:include_absentee] == "participation"
-#         #全参加者でないときは、出席情報、コメント情報を取得(必ず日付が指定されている)
-#         event_date = @event.event_dates.find(params[:date])
-        
-#         if params[:include_absentee] == "attendee"
-#           # 出席者のみ
-#           conditions[0] << " and event_attendees.event_date_id = ?  and event_attendees.state = ? "
-#           conditions << params[:date]
-#           conditions << "attend"
-#         end
-#       end
-      
-#       if params[:user_name]
-#         conditions[0] << "and users.name like (?)"
-#         conditions << "%" + params[:user_name] + "%"
-#       end
-      
-#       event_date_ids = @event.event_dates.map{ |date| date.id }
-      
-#       @attendees_hash = { }
-#       event_date_ids.each { |date_id| @attendees_hash[date_id] = { } }
-#       EventAttendee.find(:all, :conditions => ["event_date_id in (?)", event_date_ids]).each do |attendee|
-#         @attendees_hash[attendee.event_date_id][attendee.user_id] = attendee
-#       end
-      
-#       @pages, @participations = paginate(:group_participation,
-#                                          :per_page => 20,
-#                                          :conditions => conditions,
-#                                          :include => [:user])
-#       @owner = false
-#       @owner = true if @event.event_owners.find_by_user_id(session[:user_id])
-      
-#     when "event_manage_participations"
-      
-#       @event = Event.find(params[:event_id])
-#       group = Group.find_by_gid(@event.gid)
-      
-#       @pages, @participations = paginate(:group_participations,
-#                                          :per_page => 50,
-#                                          :conditions => ["group_participations.group_id = ?", group.id],
-#                                          :include => :user)
-     end
+    end
     
     render :partial => @menu, :layout => true
   end
@@ -641,14 +590,6 @@ class GroupController < ApplicationController
   end
 
   def fix_date
-#    event = Event.find(params[:event_id])
-#    event_date = EventDate.find(params[:event_date_id])
-#    if fixed_date = EventFixedDate.find_by_event_id(event_date.event_id)
-#      fixed_date.update_attributes(:event_date_id => event_date.id) unless fixed_date.event_date_id == event_date.id
-#    else
-#      fixed_date = EventFixedDate.create(:event_id => event_date.event_id, :event_date_id => event_date.id )
-#    end
-
     event = Event.find(params[:event_id])
     event_dates = EventDate.find_all_by_event_id(event.id)
 
@@ -705,7 +646,6 @@ class GroupController < ApplicationController
     attendee = EventAttendee.find_by_group_participation_id_and_event_date_id(participation_id, date_id)
     
     unless params[:comment]
-#      attendee.destroy if attendee
       render :text => "　"
       return
     end

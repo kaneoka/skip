@@ -20,7 +20,6 @@ class GroupParticipation < ActiveRecord::Base
 
   belongs_to :event, :dependent => :destroy
 
-#  has_many :event_date_user_comments, :dependent => :destroy
   has_many :event_attendees, :dependent => :destroy
 
   N_('GroupParticipation|Waiting|true')
