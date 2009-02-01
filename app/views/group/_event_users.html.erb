@@ -67,6 +67,10 @@
     <th>ソート順</th>
     <td><%= selected_tag "sort_type", params[:sort_type], @sort_types -%></td>
   </tr>
+  <tr>
+    <th>氏名</th>
+    <td><%= text_field_tag "user_name", params[:user_name] -%></td>
+  </tr>
 </table>
 <div class="submit"><%= submit_tag '検索' -%></div>
 <% end %>
@@ -80,7 +84,7 @@
   
   <div class="navi"><%= page_link @pages -%></div>
   <table border="1" class="normal" style="width:95%; overflow:hidden ; margin: 5px 10px; overflow:hidden;">
-    <th width="70px"></th><th width="100px">氏名</th>
+    <th width="40px"></th><th width="70px">氏名</th>
     <% @event.event_dates.each do |date| %>
     <% color = (fixed_date?(@event, date) ? 'red' : 'black') %>
     <th>

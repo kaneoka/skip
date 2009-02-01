@@ -80,8 +80,7 @@ module GroupHelper
 
   def get_event_menu_items selected_menu, event_id
     menus = [{:name => "イベントサマリ", :menu => "event_show" },
-             {:name => "イベント参加者", :menu => "event_users" },
-             {:name => "出席情報", :menu => "event_attendance" }]
+             {:name => "出席情報", :menu => "event_users" }]
 
     menu_items = []
     menus.each do |menu|
@@ -163,7 +162,7 @@ module GroupHelper
   def generate_owner_menus event
     menus = ""
     if event.acceptable # 締切前
-        menus << '<a id="append_date_link" href="#">[候補日の追加]</a>'
+#        menus << '<a id="append_date_link" href="#">[候補日の追加]</a>'
       if event.date_fixed? # 確定後
         menus << link_to("[締切]", {:action => 'event_close', :event_id => event.id}, :confirm => "イベントを締め切ります。よろしいですか？")
       end
@@ -175,13 +174,13 @@ module GroupHelper
 
   def generate_date_menu event, participation, owner
     menu = ""
-    if participation && owner # 幹事
-      menu << generate_owner_menus(event)
-    else # 参加者
+#     if participation && owner # 幹事
+#       menu << generate_owner_menus(event)
+#     else # 参加者
       if @event.acceptable # 締切前
         menu << '<a id="append_date_link" href="#">[候補日の追加]</a>'
       end
-    end
+#    end
     menu
   end
 

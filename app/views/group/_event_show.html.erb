@@ -41,6 +41,10 @@
 
     </div><!-- box_space -->
 
+    <% if @participation && @owner %>
+    <%= generate_owner_menus(@event) -%>
+    <% end %>
+
   </div><!-- contents_left -->
 
   <div id="contents_right">
