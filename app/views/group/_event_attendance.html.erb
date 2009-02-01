@@ -51,6 +51,20 @@
 <%= hidden_field_tag("event_id",@event.id) -%>
 <table class="search_cond_box">
   <tr>
+    <th>検索条件</th>
+    <td colspan="3">
+      <%= radio_button_tag('include_absentee',"attendee"  ,params[:include_absentee]=="attendee") -%> 出席者のみ
+      <%= radio_button_tag('include_absentee',"include_absentee"  ,params[:include_absentee]=="include_absentee") -%>　欠席者・未回答者含む
+      <%= radio_button_tag('include_absentee',"participation"  ,params[:include_absentee]=="participation") -%>　全参加者
+    </td>
+  </tr>
+  <tr id="date_select" style="display:none;">
+    <th>開催日</th>
+    <td colspan="3">
+      <%= selected_tag("date", params[:date], get_date_select_values(@event)) -%>
+    </td>
+  </tr>
+  <tr>
     <th>氏名</th>
     <td><%= text_field_tag "user_name", params[:user_name] -%></td>
   </tr>
@@ -65,6 +79,7 @@
   <div style="margin: 10px">
   <table border="1" class="normal" style="table-layout: auto;">
     <tr>
+      <th></th>
       <th>氏名</th>
       <% @event.event_dates.each do |date| %>
         <% color = (fixed_date?(@event, date) ? 'red' : 'black') %>
@@ -78,13 +93,30 @@
 
     <% @participations.each do |participation| -%>
       <tr style="background-color:<%= (session[:user_id] == participation.user_id ? '#FFE8FF' : 'white') -%>">
+	<% user = participation.user %>
+	<td>
+	  <% if session[:user_id] == user.id -%>
+	  <% if @event.owner?(user.id) -%>
+	  管理者
+	  <% else -%>
+	  参加者
+	  <% end %>
+	  <% else %>
+	  <% if @event.owner?(session[:user_id]) -%>
+	  <%= check_box_tag("manager_#{index}", "true", @event.owner?(user.id),
+              {:onclick => "document.location.href='#{url_for(:action => :event_assign_user, :event => @event, :owner => "#{@event.owner?(user.id)}", :user_id => user.id)}'"}) -%>
+	  <% else %>    
+	  <%= @event.owner?(user.id) ? "管理者" : "参加者" %>    
+	  <% end -%>
+	  <% end %>
+	</td>
 
-        <td><%= participation.user.name -%></td>
+        <td><%= user_link_to user -%></td>
         <% @event.event_dates.each do |date| -%>
-          <% span_id = "attendee_state_[#{@event.id}][#{date.id}][#{participation.user_id}]" -%>
-          <% editable = @owner || participation.user_id == session[:user_id] -%>
-          <td>
-            <span id="<%= span_id -%>"><%= show_attendees_state(date, @attendees_hash[date.id][participation.user_id]) -%></span>
+        <% span_id = "attendee_state_[#{@event.id}][#{date.id}][#{participation.user_id}]" -%>
+        <% editable = @owner || participation.user_id == session[:user_id] -%>
+        <td>
+          <span id="<%= span_id -%>"><%= show_attendees_state(date, @attendees_hash[date.id][participation.user_id]) -%></span>
             <% if editable -%>
               <%= generate_attendee_menu({:event => @event,
                                           :date => date,

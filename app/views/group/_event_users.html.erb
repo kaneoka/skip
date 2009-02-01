@@ -80,7 +80,15 @@
   
   <div class="navi"><%= page_link @pages -%></div>
   <table border="1" class="normal" style="width:95%; overflow:hidden ; margin: 5px 10px; overflow:hidden;">
-    <th width="70px"></th><th width="100px">ユーザID</th><th width="100px">氏名</th><th width="70px">社員番号</th><th width="55px">部門</th><th width="70px">内線番号</th><th>Eメールアドレス</th></tr>
+    <th width="70px"></th><th width="100px">氏名</th>
+    <% @event.event_dates.each do |date| %>
+    <% color = (fixed_date?(@event, date) ? 'red' : 'black') %>
+    <th>
+      <div style="font-size:11px;color:<%= color -%>"><%= date.to_s  %></div>
+      <div style="font-weight:normal;margin-top:3px"><%= generate_fixed_date_menu @event, date, @owner %></div>
+    </th>
+    <% end %>
+</tr>
 <% even_or_odd = 0 %>
 <% @users.each_with_index do |user, index| %>
 <% even_or_odd = 1 - even_or_odd %>
@@ -101,17 +109,27 @@
       <% end -%>
       <% end %>
   </td>
-  <td class="line_<%= even_or_odd -%>"><%=h user.uid %></td>
-  <td class="line_<%= even_or_odd -%>"><%=h user.name %></td>
-  <td class="line_<%= even_or_odd -%>"><%=h user.code %></td>
-  <td class="line_<%= even_or_odd -%>"><%=h user.profile.section %></td>
-  <td class="line_<%= even_or_odd -%>"><%=h user.profile.extension %></td>
-  <td class="line_<%= even_or_odd -%>"><%=h user.profile.email %></td>
+  <td class="line_<%= even_or_odd -%>"><%= user_link_to user %></td>
+
+        <% @event.event_dates.each do |date| -%>
+        <% span_id = "attendee_state_[#{@event.id}][#{date.id}][#{user.id}]" -%>
+        <% editable = @owner || user.id == session[:user_id] -%>
+        <td>
+          <span id="<%= span_id -%>"><%= show_attendees_state(date, @attendees_hash[date.id][user.id]) -%></span>
+            <% if editable -%>
+              <%= generate_attendee_menu({:event => @event,
+                                          :date => date,
+                                          :attendee => @attendees_hash[date.id][user.id],
+                                          :user_id => user.id,
+                                          :owner => @owner }) -%>
+            <% end -%>
+	    <%= render :partial => "editable_comment", :locals => {:date => date, :participation => user.group_participations.first, :editable => editable } -%>
+          </td>
+        <% end %>
 </tr>
 <% end %>
 </table>
 <div class="navi"><%= page_link @pages -%></div>
-
 <% end %>
 </div>
 
@@ -122,6 +140,7 @@
 </div><!-- event_panel -->
 </div><!-- contents_container -->
 
+<%= skip_jquery_include_tag "jquery.inplace" %>
 <script type="text/javascript">
   $j(function() {
   $j('#include_absentee_attendee, #include_absentee_include_absentee')
@@ -138,5 +157,21 @@
     if (!includeAbsenteeIsParticipation) {
         $j('#date_select').show();
     }
+
+    // 出席、欠席リンククリック時の動作を設定
+    addAttendeeLinkClick('<%= url_for :action => :attend %>', true);
+    addAbsenteeLinkClick('<%= url_for :action => :absence %>', true);
+
+    var post_comment_url = "<%= url_for(:action => :ado_update_attendee_comment) -%>";
+    $j('.editable_comment').editInPlace({
+        url: post_comment_url,
+        params: 'authenticity_token='+$j('#authenticity_token').val(),
+        update_value: 'comment',
+        default_text: 'クリックしてコメント入力',
+        save_button: '<a href="#" class="inplace_save">[保存]</a>',
+        cancel_button: '<a href="#" class="inplace_cancel">[キャンセル]</a>'
+    });
+
+
   });
 </script>

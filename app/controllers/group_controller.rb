@@ -437,22 +437,6 @@ class GroupController < ApplicationController
         end
       end
 
-      @pages, @users = paginate(:user,
-                                :per_page => per_page,
-                                :conditions => conditions,
-                                :order_by => order_by,
-                                :include => [:user_uids, :group_participations, :user_profile,:event_owners, :event_attendees])
-    when "event_attendance"
-      @event = Event.find(params[:event_id])
-      group = Group.find_by_gid(@event.gid)
-
-      conditions = ["group_id = ? ",@group.id]
-
-      if params[:user_name]
-        conditions[0] << "and users.name like (?)"
-        conditions << "%" + params[:user_name] + "%"
-      end
-
       event_date_ids = @event.event_dates.map{ |date| date.id }
 
       @attendees_hash = { }
@@ -461,27 +445,70 @@ class GroupController < ApplicationController
         @attendees_hash[attendee.event_date_id][attendee.user_id] = attendee
       end
 
+      @pages, @users = paginate(:user,
+                                :per_page => per_page,
+                                :conditions => conditions,
+                                :order_by => order_by,
+                                :include => [:user_uids, :group_participations, :user_profile,:event_owners, :event_attendees])
+
+      @owner = false
+      @owner = true if @event.event_owners.find_by_user_id(session[:user_id])
+
+    when "event_attendance"
+      @event = Event.find(params[:event_id])
+      group = Group.find_by_gid(@event.gid)
+      
+      params[:date] ||=  ""
+      params[:include_absentee] ||= "participation"
+
+      conditions = ["group_id = ? ",@group.id]
+      
+      unless params[:include_absentee] == "participation"
+        #全参加者でないときは、出席情報、コメント情報を取得(必ず日付が指定されている)
+        event_date = @event.event_dates.find(params[:date])
+        
+        if params[:include_absentee] == "attendee"
+          # 出席者のみ
+          conditions[0] << " and event_attendees.event_date_id = ?  and event_attendees.state = ? "
+          conditions << params[:date]
+          conditions << "attend"
+        end
+      end
+      
+      if params[:user_name]
+        conditions[0] << "and users.name like (?)"
+        conditions << "%" + params[:user_name] + "%"
+      end
+      
+      event_date_ids = @event.event_dates.map{ |date| date.id }
+      
+      @attendees_hash = { }
+      event_date_ids.each { |date_id| @attendees_hash[date_id] = { } }
+      EventAttendee.find(:all, :conditions => ["event_date_id in (?)", event_date_ids]).each do |attendee|
+        @attendees_hash[attendee.event_date_id][attendee.user_id] = attendee
+      end
+      
       @pages, @participations = paginate(:group_participation,
                                          :per_page => 20,
                                          :conditions => conditions,
                                          :include => [:user])
       @owner = false
       @owner = true if @event.event_owners.find_by_user_id(session[:user_id])
-
+      
     when "event_manage_participations"
-
+      
       @event = Event.find(params[:event_id])
       group = Group.find_by_gid(@event.gid)
-
+      
       @pages, @participations = paginate(:group_participations,
                                          :per_page => 50,
                                          :conditions => ["group_participations.group_id = ?", group.id],
                                          :include => :user)
     end
-
+    
     render :partial => @menu, :layout => true
   end
-
+  
   def event_create
     @event = Event.new(params[:event])
     @event.acceptable = true
@@ -512,6 +539,7 @@ class GroupController < ApplicationController
         EventAttendee.create(:user_id => session[:user_id],
                              :event_date_id => @event.event_dates.first.id,
                              :state => "attend",
+                             :comment => "",
                              :group_participation_id => GroupParticipation.find_by_user_id_and_group_id(session[:user_id],@group.id).id)
       end
 
@@ -594,7 +622,7 @@ class GroupController < ApplicationController
     else
         group_id = Group.find_by_gid(@event.gid).id
         participation = GroupParticipation.find_by_user_id_and_group_id(user_id, group_id)
-        event_attendee = EventAttendee.create(:user_id => user_id, :group_participation_id => participation.id, :event_date_id => event_date_id, :state => state)
+        event_attendee = EventAttendee.create(:user_id => user_id, :group_participation_id => participation.id, :event_date_id => event_date_id, :state => state, :comment => "")
     end
     return event_attendee
   end
