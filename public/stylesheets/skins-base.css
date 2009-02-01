@@ -106,7 +106,7 @@ div#tab_body {
 }
 /* ----------------------------------- */
 div#mainmenu a, div#mainmenu a:visited {
-  color: blue;
+
   font-weight: bold;
 }
 
@@ -118,26 +118,37 @@ div#mainmenu {
 ul.submenu {
   font-size: 12px;
   font-weight: bold;
+  display: block;
 }
 
 ul.submenu li {
   list-style: none;
   padding: 7px 10px;
   float: left;
-  border-top: 1px solid silver;
-  border-right: 1px solid silver;
+  border: 2px outset silver;
   text-align: center;
+  background-color: #DFFFFF;
+  display: block;
+  width: 120px;
+  height: 12px;
+  color: silver;
 }
 
 ul.submenu a, ul.submenu a:link, ul.submenu a:visited {
   text-decoration: none;
-  width: 100px;
-  height: auto;
   padding: 2px 0px;
 }
+
 div#event_panel {
   border: 1px solid silver;
   width: auto;
   padding: 10px 3px;
 }
+
+div#description_body {
+  height: 250px;
+  overflow: auto;
+  border: 1px solid silver;
+}
+
 /* ----------------------------------- */

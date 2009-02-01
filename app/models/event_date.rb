@@ -2,12 +2,17 @@
 class EventDate < ActiveRecord::Base
   has_many :event_attendees, :dependent => :destroy
 
-  def self.get_date_from_params(time_hash)
-    Time.gm(time_hash[:year], time_hash[:month], time_hash[:day], time_hash[:hour], time_hash[:minute])
+  # パラメータからTimeを生成する
+  def self.date_from_params(params, date = Time.today)
+    Time.gm(params[:year] || date.year, params[:month] || date.month, params[:day] || date.day).to_date
   end
 
-  def self.valid_date?(date_hash)
-    return Date.valid_date?(date_hash[:year].to_i, date_hash[:month].to_i, date_hash[:day].to_i)
+  def self.get_date_from_params(date_hash,time_hash)
+    Time.gm(date_hash[0], date_hash[1], date_hash[2], time_hash[0], time_hash[1])
+  end
+
+  def self.valid_date?(date_hash,time_hash)
+    return Date.valid_date?(date_hash[0].to_i, date_hash[1].to_i, time_hash[0].to_i)
   end
 
   def to_s

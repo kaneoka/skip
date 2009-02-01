@@ -75,10 +75,6 @@
     </td>
   </tr>
   <tr>
-    <th>ソート順</th>
-    <td><%= selected_tag "sort_type", params[:sort_type], @sort_types -%></td>
-  </tr>
-  <tr>
     <th>氏名</th>
     <td><%= text_field_tag "user_name", params[:user_name] -%></td>
   </tr>
@@ -94,7 +90,7 @@
   <% if @pages and @pages.item_count > 0 -%>
   
   <div class="navi"><%= page_link @pages -%></div>
-  <table border="1" class="normal" style="width:95%; overflow:hidden ; margin: 5px 10px; overflow:hidden;">
+  <table border="1" class="normal" style="overflow:hidden ; margin: 5px 10px; overflow:hidden;">
     <th width="40px"></th><th width="70px">氏名</th>
     <% @event.event_dates.each do |date| %>
     <% color = (fixed_date?(@event, date) ? 'red' : 'black') %>

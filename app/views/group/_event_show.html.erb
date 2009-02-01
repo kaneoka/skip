@@ -7,9 +7,9 @@
       <% end %>
     </ul>
   </div>
-  
+
   <div id="event_panel">
-  
+
   <div id="contents_left">
 
     <div class="box_space">
@@ -41,7 +41,7 @@
       <div class="box_space_title"><%= icon_tag('information') -%><span>状態</span></div>
       <div class="box_space_body">
         <% state = generate_event_visitor_state(@event, @participation, @owner, session[:user_id]) -%>
-	<%= state -%>
+        <%= state -%>
       </div>
     </div>
     <% if @participation && @owner %>
@@ -49,13 +49,13 @@
     <% end %>
 
   </div><!-- contents_left -->
-
+  
   <div id="contents_right">
-
+    
     <div class="input_line">
       <h1 id="title" hight="10px"><%=h @event.name %></h1>
     </div>
-
+    
     <% informations = generate_event_informations(@event, @participation, @owner) -%>
     <% unless informations.empty? -%>
     <div class="event_info_space">
@@ -67,75 +67,78 @@
       </div>
     </div><!-- event_info_space -->
     <% end %>
+    
+    <div class="input_line">
+      <div class="input_label">幹事</div>
+      <% @admin_users.each do |user| %>
+      <%= user_link_to user %>
+      <% end %>
+    </div>
+    
+    <div class="input_line">
+      <div class="input_label">開催日時</div>
+      <%=h @event.date_fixed? ? @event.holdingDatetime : "開催日が確定していません" %>
+    </div>
+    
+    <div class="input_line">
+      <div class="input_label">説明</div>
 
-    <div class="group_info_space">
-      <h2 class="topix_title"><%= icon_tag('asterisk_orange') %>このイベントについて</h2>
-      <div class="group_info_space_desc">
-
-	<div class="input_line">
-	  <div class="input_label">幹事</div>
-	      <% @admin_users.each do |user| %>
-	      <%= user_link_to user %>
-	      <% end %>
-	</div>
-
-	<div class="input_line">
-	  <div class="input_label">開催日時</div>
-	  <%= @event.holdingDatetime -%>
-	</div>
-	
-	<div class="input_line">
-	  <div class="input_label">説明</div>
-	</div>
-	<div class="input_line">
-	  <%= render_richtext(@event.description, @event.symbol) -%>
-	</div>
-
-	<div class="input_line">
-	  <div class="input_label">場所</div>
-	  <div class="hiki_style"><%= hiki_parse(@event.place, @event.symbol) %></div>
-	</div>
-
+      <div id="description_body">
+	<%= render_richtext(@event.description, @event.symbol) -%>
       </div>
-
-    </div><!-- group_info_space -->
-
-    <%= hidden_field_tag("authenticity_token", form_authenticity_token) %>
-    <div class="event_info_space">
-      <div class="topix_title" style="text-align: left;"><%= icon_tag('asterisk_orange') -%><span>開催日/候補日の調整</span></div>
-      <div class="event_info_space_desc">
-        <table style="width: 100%;" id="event_dates">
-          <%= render :partial => 'date', :collection => @event.event_dates, :locals => { :event => @event,
-                                                                                       :user_id => session[:user_id],
-                                                                                       :owned => @owner} -%>
-        </table>
-
-
-        <div id="append_date_space" style="border: 1px dashed silver; margin-top: 5px; padding: 5px; display: none;">
-          <div style="margin-bottom:5px">
-            <% form_tag(:action => 'append_date') do -%>
-            <%= hidden_field("event","id") -%>
-            開始時刻：<%= select_datetime  Time.now, { :prefix => 'date[start_time]',  :use_month_numbers => true, :minute_step => 15} -%><br/>
-            終了時刻：<%= select_datetime  Time.now + (60*60), { :prefix => 'date[end_time]',  :use_month_numbers => true, :minute_step => 15} -%><br/>
-          </div>
-          <p><%= submit_tag '追加' %>　<input id="cancel_button" type="button" value="キャンセル"/></p>
-          <% end -%>
+    </div>
+    
+    <div class="input_line">
+      <div class="input_label">場所</div>
+      <div class="hiki_style"><%= hiki_parse(@event.place, @event.symbol) %></div>
+    </div>
+  
+  <%= hidden_field_tag("authenticity_token", form_authenticity_token) %>
+  <div class="event_info_space">
+    <div class="topix_title" style="text-align: left;"><%= icon_tag('asterisk_orange') -%><span>開催日/候補日の調整</span></div>
+    <div class="event_info_space_desc">
+      <table style="width: 100%;" id="event_dates">
+        <%= render :partial => 'date', :collection => @event.event_dates, :locals => { :event => @event,
+        :user_id => session[:user_id],
+        :owned => @owner} -%>
+      </table>
+      
+      
+      <div id="append_date_space" style="border: 1px dashed silver; margin-top: 5px; padding: 5px; display: none;">
+        <div style="margin-bottom:5px">
+          <% form_tag(:action => 'append_date') do -%>
+          <%= hidden_field("event","id") -%>
+	  
+          開始時刻：<%= text_field_tag "start_date", Time.now.strftime('%Y/%m/%d'), :maxlength => 15, :class => 'datepicker' -%>
+          <%= select("date", "start_time", time_options, {:selected => Time.now.strftime('%H') + ":00" }, {:style => "width: 100px;"}) -%>
+          <br/>
+          終了時刻：<%= text_field_tag "end_date", Time.now.strftime('%Y/%m/%d'), :maxlength => 15, :class => 'datepicker' -%>
+          <%= select("date", "end_time", time_options, {:selected => (Time.now + (60*60)).strftime('%H') + ":00" }, {:style => "width: 100px;"}) -%>
+	  
         </div>
-        <% if @participation %>
-        <div id="append_date_menu" style="border: 1px dashed silver; margin-top: 5px; padding: 5px; ">
-          <%= generate_date_menu(@event, @participation, @owner) -%>
-        </div>
-        <% end %>
+        <p><%= submit_tag '追加' %>　<input id="cancel_button" type="button" value="キャンセル"/></p>
+        <% end -%>
       </div>
-    </div><!-- event_info_space -->
-
+      <% if @participation %>
+      <div id="append_date_menu" style="border: 1px dashed silver; margin-top: 5px; padding: 5px; ">
+        <%= generate_date_menu(@event, @participation, @owner) -%>
+      </div>
+      <% end %>
+    </div>
+  </div><!-- event_info_space -->
+  
   </div><!--summary_right-->
-
-</div><!-- contents_right -->
+  
+  </div><!-- contents_right -->
 </div><!-- event_panel -->
 </div><!-- summary_container -->
 
+<%= skip_javascript_include_tag "fckeditor/fckeditor" %>
+<%= skip_jquery_include_tag "ui.datepicker" %>
+<%= skip_stylesheet_link_tag "jquery.ui.datepicker.css" %>
+<%= skip_javascript_include_tag "jquery/ui/i18n/ui.datepicker-ja.js" %>
 <%= skip_jquery_include_tag "jquery.inplace" %>
+
 <script type="text/javascript">
 $j(function() {
     var post_comment_url = "<%= url_for(:action => :ado_update_attendee_comment) -%>";
@@ -171,5 +174,18 @@ $j(function() {
     // 出席、欠席リンククリック時の動作を設定
     addAttendeeLinkClick('<%= url_for :action => :attend %>');
     addAbsenteeLinkClick('<%= url_for :action => :absence %>');
+
+   $j('.datepicker' ).datepicker(
+        $j.extend({},
+            $j.datepicker.regional['<%= GetText.locale.to_s %>'],
+            { duration: '',
+              yearRange: '-0:10',
+              showOn: 'both',
+              buttonImage: platform_url_root + '/images/skip/jquery/ui.datepicker/calendar.png',
+              buttonImageOnly: true
+            }
+        )
+    );
+
 });
 </script>

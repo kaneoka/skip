@@ -523,15 +523,19 @@ class GroupController < ApplicationController
     @event.acceptable = true
     @event.gid = @group.gid
 
-    #候補日
-    params[:dates].each_value do |date|
-      @event.event_dates.build(:start_time => EventDate.get_date_from_params(date[:start]), :end_time => (EventDate.get_date_from_params date[:end]), :fixed_date => false )
+    params[:date].each_with_index do |date, index|
+
+      start_date = params["start_date_#{index}"].split("/")
+      end_date = params["end_date_#{index}"].split("/")
+      start_time = params[:date]["index_#{index}"]["start_time"].split(/:/)
+      end_time = params[:date]["index_#{index}"]["end_time"].split(/:/)
+
+      @event.event_dates.build(:start_time => EventDate.get_date_from_params(start_date,start_time), :end_time => EventDate.get_date_from_params(end_date,end_time), :fixed_date => false)
     end
 
     unless validate_params params, @event
       @menu = "event_new"
       render :partial => @menu, :layout => true
-      #render :action => "event", :menu => "event_new"
       return
     end
 
@@ -651,7 +655,7 @@ class GroupController < ApplicationController
     event_dates.each do |event_date|
 
       if event_date.id == params[:event_date_id].to_i
-        event_date.update_attributes(:fixed_date => true )        
+        event_date.update_attributes(:fixed_date => true )
       elsif event_date.fixed_date == true
         event_date.update_attributes(:fixed_date => false )
       end
@@ -724,32 +728,39 @@ class GroupController < ApplicationController
   def append_date
     event = Event.find(params[:event][:id])
 
+    start_date = params["start_date"].split("/")
+    end_date = params["end_date"].split("/")
+    start_time = params[:date]["start_time"].split(/:/)
+    end_time = params[:date]["end_time"].split(/:/)
+
     validate_error = false
 
-    # ありえない日付チェック
-    unless EventDate.valid_date?(params[:date][:start_time]) && EventDate.valid_date?(params[:date][:end_time])
+    unless EventDate.valid_date?(start_date,start_time) && EventDate.valid_date?(end_date,end_time)
       flash[:warning] = "候補日の追加を再度行ってください。(存在する日付を指定してください）"
       validate_error = true
     end
 
+    event_start = EventDate.get_date_from_params(start_date,start_time)
+    event_end = EventDate.get_date_from_params(end_date,end_time)
+
     # start、endの前後関係チェック
-    start_date = EventDate.get_date_from_params params[:date][:start_time]
-    end_date = EventDate.get_date_from_params params[:date][:end_time]
-    if start_date >= end_date
+    if event_start >= event_end
       flash[:warning] = "候補日の追加を再度行ってください。(終了時刻は開始時刻以降の時間を設定してください）"
       validate_error = true
     end
 
     # まったく同じ候補日のチェック(DBを見る)
-    if EventDate.find_by_event_id_and_start_time_and_end_time(event.id, start_date, end_date)
+    if EventDate.find_by_event_id_and_start_time_and_end_time(event.id, event_start, event_end)
+
       flash[:warning] = "候補日の追加を再度行ってください。(すでに同じ候補日が存在します。追加する場合は他の日付を指定してください）"
       validate_error = true
     end
 
     unless validate_error
-      event.event_dates.build(:start_time => start_date, :end_time => end_date, :fixed_date => false)
+      event.event_dates.build(:start_time => event_start, :end_time => event_end, :fixed_date => false)
       event.save #eventのupdated_onを更新するために@eventをsaveする(キャッシュ生成用)
     end
+
     redirect_to :action => "event", :menu => "event_show",:event_id => event.id
 
   end
@@ -835,9 +846,18 @@ private
     # 日付のフォーマットチェック
     index = 1
     last_join_dates = []
-    params[:dates].each_value do |date_hash|
-      if EventDate.valid_date?(date_hash[:start]) && EventDate.valid_date?(date_hash[:end])
-        date = EventDate.new(:start_time => EventDate.get_date_from_params(date_hash[:start]), :end_time => (EventDate.get_date_from_params date_hash[:end]))
+    params[:date].each_with_index do |date, index|
+
+      start_date = params["start_date_#{index}"].split("/")
+      end_date = params["end_date_#{index}"].split("/")
+      start_time = params[:date]["index_#{index}"]["start_time"].split(/:/)
+      end_time = params[:date]["index_#{index}"]["end_time"].split(/:/)
+
+      if EventDate.valid_date?(start_date,start_time) && EventDate.valid_date?(end_date,end_time)
+        event_start = EventDate.get_date_from_params(start_date,start_time)
+        event_end = EventDate.get_date_from_params(end_date,end_time)
+
+        date = EventDate.new(:start_time => event_start, :end_time => event_end )
         # 開始時刻は終了時刻以前か
         if date.start_time >= date.end_time
           event.errors.add("候補日(#{index})の終了時刻", "は開始時刻以降の時間を設定してください")

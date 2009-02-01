@@ -4,9 +4,9 @@
 
     <div id="mainmenu">
       <ul class="submenu">
-	<% get_events_menu_items(@menu,@participation).each do |menu_item| %>
-	<li class="menu"><%= menu_item -%></li>
-	<% end %>
+        <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
+        <li class="menu"><%= menu_item -%></li>
+        <% end %>
       </ul>
     </div>
 
@@ -24,8 +24,11 @@
         <div id="dates_area"><% @event.event_dates.each_with_index do |date, index| -%><div>
             <div style="margin-top:5px;">
               <div class="input_label" id="dates_header" style="height: 35px;">開催日／<br/>候補日（<%= index+1 %>）</div>
-              開始時刻：<%= select_datetime  date.start_time, { :prefix => "dates[#{index}][start]",  :use_month_numbers => true, :minute_step => 15} -%><br/>
-              終了時刻：<%= select_datetime  date.end_time, { :prefix => "dates[#{index}][end]",  :use_month_numbers => true, :minute_step => 15} -%>
+              開始時刻：<%= text_field_tag "start_date_#{index}", (date.start_time.strftime('%Y/%m/%d') if date.start_time), :maxlength => 15, :class => 'datepicker' -%>
+              <%= select("date[index_#{index}]", "start_time", time_options, {:selected => (date.start_time.strftime('%H') + ":00" if date.start_time) }, {:style => "width: 100px;"}) -%>
+              <br/>
+              終了時刻：<%= text_field_tag "end_date_#{index}", (date.end_time.strftime('%Y/%m/%d') if date.end_time), :maxlength => 15, :class => 'datepicker' -%>
+              <%= select("date[index_#{index}]", "end_time", time_options, {:selected => (date.end_time.strftime('%H') + ":00" if date.end_time) }, {:style => "width: 100px;"}) -%>
               <div style="clear: left"></div>
             </div>
           </div><% end -%></div>
@@ -65,17 +68,24 @@
 <div id="dates_template" style="display:none;">
   <div style="margin-top:5px;">
     <div class="input_label" id="dates_header" style="height: 35px;">開催日／<br/>候補日（XXX）<br/></div>
-    開始時刻：<%= select_datetime  Time.now, { :prefix => 'dates[xxx][start]',  :use_month_numbers => true, :minute_step => 15} -%><br/>
-    終了時刻：<%= select_datetime  Time.now + (60*60), { :prefix => 'dates[xxx][end]',  :use_month_numbers => true, :minute_step => 15} -%>
+    開始時刻：<%= text_field_tag "start_date_xxx", Time.now.strftime('%Y/%m/%d'), :maxlength => 15, :class => 'datepicker' -%>
+    <%= select("date[index_xxx]", "start_time", time_options, {:selected => Time.now.strftime('%H') + ":00" }, {:style => "width: 100px;"}) -%>
+    <br/>
+    終了時刻：<%= text_field_tag "end_date_xxx", Time.now.strftime('%Y/%m/%d'), :maxlength => 15, :class => 'datepicker' -%>
+    <%= select("date[index_xxx]", "end_time", time_options, {:selected => (Time.now + (60*60)).strftime('%H') + ":00" }, {:style => "width: 100px;"}) -%>
     <div style="clear: left"></div>
   </div>
 </div>
 
-<%= javascript_include_tag "jquery.inplace.js" %>
 <%= skip_javascript_include_tag "fckeditor/fckeditor" %>
+<%= skip_jquery_include_tag "ui.datepicker" %>
+<%= skip_stylesheet_link_tag "jquery.ui.datepicker.css" %>
+<%= skip_javascript_include_tag "jquery/ui/i18n/ui.datepicker-ja.js" %>
+<%= skip_jquery_include_tag "jquery.inplace" %>
+
 <script type="text/javascript">
   $j(function() {
-  
+
   $j('#append_date_link')
   .click(function() {
   index = $j('#dates_area').children().length;
@@ -84,12 +94,13 @@
   return false;
   }
 
-        $j(document.createElement("div"))
-        .append($j('#dates_template').html().replace(/xxx/g, index).replace(/XXX/g, (index+1)))
-        .appendTo($j('#dates_area'));
+    $j(document.createElement("div"))
+       .append($j('#dates_template').html().replace(/xxx/g, index).replace(/XXX/g, (index+1)))
+       .appendTo($j('#dates_area'));
 
         setDeleteDateLinkVisibility();
         return false;
+
     });
 
     $j('#remove_date_link')
@@ -109,8 +120,21 @@
         }
 };
 
+   $j('.datepicker' ).datepicker(
+        $j.extend({},
+            $j.datepicker.regional['<%= GetText.locale.to_s %>'],
+            { duration: '',
+              yearRange: '-0:10',
+              showOn: 'both',
+              buttonImage: platform_url_root + '/images/skip/jquery/ui.datepicker/calendar.png',
+              buttonImageOnly: true
+            }
+        )
+    );
+
      FCKeditor.BasePath = platform_url_root + "/javascripts/skip/fckeditor/";
      new FCKeditor('event_description', '98%', '350', 'Normal').ReplaceTextarea();
+
 
 });
 </script>

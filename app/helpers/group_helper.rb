@@ -72,10 +72,19 @@ module GroupHelper
   end
 
   def get_events_menu_items selected_menu, participation
-    @@menus = [{:name => "イベントの一覧", :menu => "event_list" }]
-    @@menus << {:name => "イベントの新規作成", :menu => "event_new" } if participation and participation.waiting != true
+    menus = [{:name => "イベントの一覧", :menu => "event_list" }]
+    menus << {:name => "イベントの新規作成", :menu => "event_new" } if participation and participation.waiting != true
 
-    get_menu_items @@menus, selected_menu, "event"
+    menu_items = []
+    menus.each do |menu|
+      if menu[:menu] == selected_menu
+        menu_items << "<b>#{menu[:name]}</b>"
+      else
+        link_to_params = { :action => "event", :menu => menu[:menu] }
+        menu_items << link_to(menu[:name], link_to_params, :confirm => menu[:confirm])
+      end
+    end
+    menu_items
   end
 
   def get_event_menu_items selected_menu, event_id
@@ -203,6 +212,17 @@ module GroupHelper
       date_select_values << [date_str, date.id.to_s]
     end
     date_select_values
+  end
+
+  def time_options
+    time_options = []
+    for hour in 0..23
+      for minute in 0..3
+        val = hour.to_s.rjust(2, '0') + ":" + (minute * 15).to_s.rjust(2, '0')
+        time_options << [val, val]
+      end
+    end
+    time_options
   end
 
 end
