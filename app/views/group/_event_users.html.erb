@@ -74,26 +74,43 @@
 
 <div class="search_result_space">
 
-<% if @pages and @pages.item_count > 0 -%>
-
+<div class="desc" style="margin-bottom: 10px;">この画面では、管理者の権限設定をすることが可能です。</div>
+  
+  <% if @pages and @pages.item_count > 0 -%>
+  
   <div class="navi"><%= page_link @pages -%></div>
   <table border="1" class="normal" style="width:95%; overflow:hidden ; margin: 5px 10px; overflow:hidden;">
     <th width="70px"></th><th width="100px">ユーザID</th><th width="100px">氏名</th><th width="70px">社員番号</th><th width="55px">部門</th><th width="70px">内線番号</th><th>Eメールアドレス</th></tr>
-    <% even_or_odd = 0 %>
-    <% for user in @users %>
-    <% even_or_odd = 1 - even_or_odd %>
-    <tr>
-      <td class="line_<%= even_or_odd -%>"><%= user_state(@event.owner? user) -%></td>
-      <td class="line_<%= even_or_odd -%>"><%=h user.uid %></td>
-      <td class="line_<%= even_or_odd -%>"><%=h user.name %></td>
-      <td class="line_<%= even_or_odd -%>"><%=h user.code %></td>
-      <td class="line_<%= even_or_odd -%>"><%=h user.profile.section %></td>
-      <td class="line_<%= even_or_odd -%>"><%=h user.profile.extension %></td>
-      <td class="line_<%= even_or_odd -%>"><%=h user.profile.email %></td>
-    </tr>
-    <% end %>
-  </table>
-  <div class="navi"><%= page_link @pages -%></div>
+<% even_or_odd = 0 %>
+<% @users.each_with_index do |user, index| %>
+<% even_or_odd = 1 - even_or_odd %>
+<tr>
+  <td class="line_<%= even_or_odd -%>">
+    <% if session[:user_id] == user.id -%>
+      <% if @event.owner?(user.id) -%>
+      管理者
+      <% else -%>
+      参加者
+      <% end %>
+    <% else %>
+      <% if @event.owner?(session[:user_id]) -%>
+      <%= check_box_tag("manager_#{index}", "true", @event.owner?(user.id),
+        {:onclick => "document.location.href='#{url_for(:action => :event_assign_user, :event => @event, :owner => "#{@event.owner?(user.id)}", :user_id => user.id)}'"}) -%>
+      <% else %>    
+      <%= @event.owner?(user.id) ? "管理者" : "参加者" %>    
+      <% end -%>
+      <% end %>
+  </td>
+  <td class="line_<%= even_or_odd -%>"><%=h user.uid %></td>
+  <td class="line_<%= even_or_odd -%>"><%=h user.name %></td>
+  <td class="line_<%= even_or_odd -%>"><%=h user.code %></td>
+  <td class="line_<%= even_or_odd -%>"><%=h user.profile.section %></td>
+  <td class="line_<%= even_or_odd -%>"><%=h user.profile.extension %></td>
+  <td class="line_<%= even_or_odd -%>"><%=h user.profile.email %></td>
+</tr>
+<% end %>
+</table>
+<div class="navi"><%= page_link @pages -%></div>
 
 <% end %>
 </div>
@@ -106,8 +123,8 @@
 </div><!-- contents_container -->
 
 <script type="text/javascript">
-$j(function() {
-    $j('#include_absentee_attendee, #include_absentee_include_absentee')
+  $j(function() {
+  $j('#include_absentee_attendee, #include_absentee_include_absentee')
     .click(function() {
         $j('#date_select').show();
     });
@@ -121,5 +138,5 @@ $j(function() {
     if (!includeAbsenteeIsParticipation) {
         $j('#date_select').show();
     }
-});
+  });
 </script>

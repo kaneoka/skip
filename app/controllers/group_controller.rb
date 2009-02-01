@@ -584,9 +584,9 @@ class GroupController < ApplicationController
       EventOwner.create(:event_id => event.id, :user_id => params[:user_id])
     end
     flash[:notice] = "管理者情報を変更しました。"
-    redirect_to :action => 'event', :menu => 'event_manage_participations', :eid => event.eid
+    redirect_to :action => 'event', :menu => 'event_users', :eid => event.eid
   end
-
+ 
   # 出席欠席状況の変更
   def change_attend_state(user_id, event_date_id, state, eid)
     @event = Event.find_by_eid(eid)

@@ -96,8 +96,7 @@ module GroupHelper
   end
 
   def get_event_manage_menu_items selected_menu, eid
-    menus = [{:name => "イベントの編集", :menu => "event_edit" },
-             {:name => "参加者管理", :menu => "event_manage_participations" } ]
+    menus = [{:name => "イベントの編集", :menu => "event_edit" } ]
 
     menu_items = []
     menus.each do |menu|
