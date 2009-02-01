@@ -2,7 +2,7 @@
 
     <div id="mainmenu">
       <ul class="submenu">
-	<% get_events_menu_items(@menu).each do |menu_item| %>
+	<% get_events_menu_items(@menu,@participation).each do |menu_item| %>
 	<li class="menu"><%= menu_item -%></li>
 	<% end %>
       </ul>
@@ -26,12 +26,12 @@
       <tr <% if event.past_event? %> bgcolor="pink" <% end %>>
         <td><%= event.past_event? ? "過去" : "開催予定" %></td>
         <td><%= event_link_to event %></td>
-        <td><%=h event.event_fixed_date ? event.holdingDatetime : "開催日が確定していません" %></td>
+        <td><%=h event.date_fixed? ? event.holdingDatetime : "開催日が確定していません" %></td>
         <td><div class="hiki_style"><%= event.place %></td>
         <td><%= event.event_admin_users %>
 	</td>
-	<td><% if event.event_fixed_date %>
-	  <%= event.event_fixed_date.event_date.event_attendees.select{|at| at.state}.size -%>人
+	<td><% if event.date_fixed? %>
+	  <%= event.holding_date.event_attendees.select{|at| at.state == "attend" }.size -%>人
 	  <% end %>
 	</td>
       </tr>

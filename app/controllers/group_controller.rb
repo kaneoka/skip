@@ -374,19 +374,18 @@ class GroupController < ApplicationController
 
       @pages, @events = paginate(:events,
                                  :per_page => 10,
-                                 :conditions => ["gid = ?",@group.gid],
-                                 :conditions => ["gid = ? and event_publications.symbol in (?)",@group.gid,condition_params],
+                                 :conditions => ["gid = ? and publication_symbol in (?)",@group.gid,condition_params],
                                  :order => 'event_dates.end_time desc',
-                                 :include => ['event_publication','event_dates','event_fixed_date'])
+                                 :include => ['event_dates'])
       unless @events && @events.size > 0
         flash.now[:notice] = 'イベントはありませんでした。'
       end
     when "event_edit"
-      if @event = Event.find_by_eid(params[:eid], :include => [:event_publication] )
-        params[:publication_type] = @event.event_publication.symbol == 'sid:allusers' ? 'public' :'private'
+      if @event = Event.find_by_eid(params[:eid])
+        params[:publication_type] = @event.publication_symbol == 'sid:allusers' ? 'public' :'private'
       end
     when "event_show"
-      if @event = Event.find_by_eid(params[:eid], :include => [:event_publication] )
+      if @event = Event.find_by_eid(params[:eid] )
         group = Group.find_by_gid(@event.gid)
 
         flash[:warning] ||= nil
@@ -432,8 +431,9 @@ class GroupController < ApplicationController
 
         if params[:include_absentee] == "attendee"
           # 出席者のみ
-          conditions[0] << " and event_attendees.event_date_id = ?  and event_attendees.state = true"
+          conditions[0] << " and event_attendees.event_date_id = ?  and event_attendees.state = ? "
           conditions << params[:date]
+          conditions << "attend"
         end
       end
 
@@ -489,7 +489,7 @@ class GroupController < ApplicationController
 
     #候補日
     params[:dates].each_value do |date|
-      @event.event_dates.build(:start_time => EventDate.get_date_from_params(date[:start]), :end_time => (EventDate.get_date_from_params date[:end]))
+      @event.event_dates.build(:start_time => EventDate.get_date_from_params(date[:start]), :end_time => (EventDate.get_date_from_params date[:end]), :fixed_date => false )
     end
 
     unless validate_params params, @event
@@ -500,8 +500,7 @@ class GroupController < ApplicationController
     end
 
     # 公開範囲
-    publication_symbol = params[:publication_type] == "public" ? "sid:allusers" : @group.symbol
-    @event.event_publication = EventPublication.new(:symbol => publication_symbol)
+    @event.publication_symbol = params[:publication_type] == "public" ? "sid:allusers" : @group.symbol
 
     # 管理者(自分)
     @event.event_owners.build(:user_id => session[:user_id])
@@ -509,10 +508,10 @@ class GroupController < ApplicationController
     # @eventをsaveすることで、候補日、公開範囲、ユーザ、制約全部一緒にDBに入る
     if @event.save
       if @event.event_dates.size == 1 # 候補日がひとつなら確定日に指定する
-        EventFixedDate.create(:event_id => @event.id, :event_date_id => @event.event_dates.first.id)
+        @event.event_dates.first.fixed_date = true
         EventAttendee.create(:user_id => session[:user_id],
                              :event_date_id => @event.event_dates.first.id,
-                             :state => true,
+                             :state => "attend",
                              :group_participation_id => GroupParticipation.find_by_user_id_and_group_id(session[:user_id],@group.id).id)
       end
 
@@ -525,7 +524,7 @@ class GroupController < ApplicationController
   end
 
   def event_update
-    event = Event.find_by_eid(params[:eid], :include => [:event_publication] )
+    event = Event.find_by_eid(params[:eid])
     if event.update_attributes(params[:event])
       redirect_to :action => 'event', :menu => "event_show", :eid => event.eid
     else
@@ -535,7 +534,7 @@ class GroupController < ApplicationController
   end
 
   def event_destroy
-    event = Event.find_by_id(params[:event_id], :include => [:event_publication] )
+    event = Event.find_by_id(params[:event_id] )
     if event.destroy
       flash[:notice] = 'イベントは削除されました。'
       redirect_to :action => 'event'
@@ -563,7 +562,7 @@ class GroupController < ApplicationController
 
   # キャンセル(締め切り後)
   def event_cancel
-    change_attend_state(params[:user_id], params[:event_date_id], false,params[:eid])
+    change_attend_state(params[:user_id], params[:event_date_id], "absence",params[:eid])
 
     flash[:notice] = "キャンセルしました。"
     redirect_to :action => "event", :menu => "event_show", :eid => params[:eid]
@@ -600,14 +599,25 @@ class GroupController < ApplicationController
     return event_attendee
   end
 
-  # 確定（管理者のみ）
   def fix_date
+#    event = Event.find_by_eid(params[:eid])
+#    event_date = EventDate.find(params[:event_date_id])
+#    if fixed_date = EventFixedDate.find_by_event_id(event_date.event_id)
+#      fixed_date.update_attributes(:event_date_id => event_date.id) unless fixed_date.event_date_id == event_date.id
+#    else
+#      fixed_date = EventFixedDate.create(:event_id => event_date.event_id, :event_date_id => event_date.id )
+#    end
+
     event = Event.find_by_eid(params[:eid])
-    event_date = EventDate.find(params[:event_date_id])
-    if fixed_date = EventFixedDate.find_by_event_id(event_date.event_id)
-      fixed_date.update_attributes(:event_date_id => event_date.id) unless fixed_date.event_date_id == event_date.id
-    else
-      fixed_date = EventFixedDate.create(:event_id => event_date.event_id, :event_date_id => event_date.id )
+    event_dates = EventDate.find_all_by_event_id(event.id)
+
+    event_dates.each do |event_date|
+
+      if event_date.id == params[:event_date_id].to_i
+        event_date.update_attributes(:fixed_date => true )        
+      elsif event_date.fixed_date == true
+        event_date.update_attributes(:fixed_date => false )
+      end
     end
 
     flash[:notice] = "確定しました"
@@ -625,13 +635,13 @@ class GroupController < ApplicationController
 
   # 出席
   def attend
-    event_attendee = change_attend_state(params[:user_id], params[:event_date_id], true, params[:eid])
+    event_attendee = change_attend_state(params[:user_id], params[:event_date_id], "attend", params[:eid])
     render_attendee(event_attendee, params[:only_icon])
   end
 
   # 欠席
   def absence
-    event_attendee = change_attend_state(params[:user_id], params[:event_date_id], false, params[:eid])
+    event_attendee = change_attend_state(params[:user_id], params[:event_date_id], "absence", params[:eid])
     render_attendee(event_attendee, params[:only_icon])
   end
 
@@ -645,34 +655,36 @@ class GroupController < ApplicationController
   end
 
   def ado_update_attendee_comment
-
+    
     if params[:element_id]
       split_params = params[:element_id].split('_')
       participation_id ||= split_params[3]
       date_id ||= split_params[2]
     end
-    user_comment = EventDateUserComment.find_by_group_participation_id_and_event_date_id(participation_id, date_id)
+    attendee = EventAttendee.find_by_group_participation_id_and_event_date_id(participation_id, date_id)
+    
     unless params[:comment]
-      user_comment.destroy if user_comment
+#      attendee.destroy if attendee
       render :text => "　"
       return
     end
 
-    if user_comment
-      user_comment.update_attributes(:comment => params[:comment])
+    if attendee
+      attendee.update_attributes(:comment => params[:comment])
     else
-      user_comment = EventDateUserComment.create(:user_id => session[:user_id],
-                                                 :event_date_id => date_id,
-                                                 :group_participation_id => participation_id,
-                                                 :comment => params[:comment])
+      attendee = EventAttendee.create(:user_id => session[:user_id],
+                                      :event_date_id => date_id,
+                                      :group_participation_id => participation_id,
+                                      :state => "pending",
+                                      :comment => params[:comment])
     end
+
     # Inplaceエディタ内で直接ここで返した文字列を表示するためにHTMLエスケープする
-    render :text => ERB::Util.html_escape(user_comment.comment) || ""
+    render :text => ERB::Util.html_escape(attendee.comment) || ""
   end
 
   # 候補日追加(管理者以外も可能)
   def append_date
-
     event = Event.find_by_eid(params[:event][:eid])
 
     validate_error = false
@@ -698,7 +710,7 @@ class GroupController < ApplicationController
     end
 
     unless validate_error
-      event.event_dates.build(:start_time => start_date, :end_time => end_date)
+      event.event_dates.build(:start_time => start_date, :end_time => end_date, :fixed_date => false)
       event.save #eventのupdated_onを更新するために@eventをsaveする(キャッシュ生成用)
     end
     redirect_to :action => "event", :menu => "event_show",:eid => event.eid

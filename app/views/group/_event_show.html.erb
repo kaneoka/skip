@@ -2,7 +2,7 @@
 
     <div id="mainmenu">
       <ul class="submenu">
-	<% get_events_menu_items(@menu).each do |menu_item| %>
+	<% get_events_menu_items(@menu,@participation).each do |menu_item| %>
 	<li class="menu"><%= menu_item -%></li>
 	<% end %>
       </ul>
@@ -78,7 +78,7 @@
 	      <% end %>
 	    </td>
           </tr>
-          <% if @event.event_fixed_date %>
+          <% if @event.date_fixed? %>
           <tr>
             <th>開催日時</th><td><%= @event.holdingDatetime -%></td>
           </tr>

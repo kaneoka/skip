@@ -1,5 +1,5 @@
 <% id_str = "_#{date.id}_#{participation.id}" %>
-<% comment = participation.event_date_user_comments.find_by_event_date_id(date.id) %>
+<% comment = participation.event_attendees.find_by_event_date_id(date.id) %>
 <% comment_comment = (comment and comment.comment!="") ? comment.comment : "" %>
 <% comment_comment = "クリックしてコメント入力" if editable and comment_comment == "" %>
 <%= hidden_field_tag("authenticity_token", form_authenticity_token) %>

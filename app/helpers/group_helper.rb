@@ -43,7 +43,7 @@ module GroupHelper
     end
 
     if event.acceptable
-      state << (event.event_fixed_date ? "開催日は確定済みです" : "開催日は未確定です")
+      state << (event.date_fixed? ? "開催日は確定済みです" : "開催日は未確定です")
     else
       state << "締め切られています"
     end
@@ -71,9 +71,9 @@ module GroupHelper
     informations
   end
 
-  def get_events_menu_items selected_menu
-    @@menus = [{:name => "イベントの新規作成", :menu => "event_new" },
-               {:name => "イベントの一覧", :menu => "event_list" }]
+  def get_events_menu_items selected_menu, participation
+    @@menus = [{:name => "イベントの一覧", :menu => "event_list" }]
+    @@menus << {:name => "イベントの新規作成", :menu => "event_new" } if participation and participation.waiting != true
 
     get_menu_items @@menus, selected_menu, "event"
   end
@@ -120,7 +120,7 @@ module GroupHelper
       menu << "<a href=\"#\" id=\"attendee_link_#{options[:event].eid}_#{options[:date].id}_#{options[:user_id]}\" class=\"attendee_link\" >[出席]</a>"
       menu << "<a href=\"#\" id=\"absentee_link_#{options[:event].eid}_#{options[:date].id}_#{options[:user_id]}\" class=\"absentee_link\" >[欠席]</a>"
     else
-      if options[:attendee] and options[:attendee].state
+      if options[:attendee] and options[:attendee].state == "attend"
         menu << link_to("[キャンセル]", { :action => :event_cancel, :eid => options[:event].eid, :event_date_id => options[:date].id, :user_id => options[:user_id] },
                                           :method => :post, :confirm => "本当にキャンセルしますか？")
       end
@@ -146,20 +146,25 @@ module GroupHelper
     unless attendee
       icon_tag('help')
     else
-      attendee.state ? icon_tag('emoticon_happy') : icon_tag('cross')
+      case attendee.state
+        when "attend"
+        icon_tag('emoticon_happy')
+        when "absence"
+        icon_tag('cross')       
+      end
     end
   end
 
   # 指定日がイベントの開催日か否か
   def fixed_date? event, date
-    event.event_fixed_date && event.event_fixed_date.event_date_id == date.id
+    event.event_dates && date.fixed_date == true
   end
 
   def generate_owner_menus event
     menus = ""
     if event.acceptable # 締切前
         menus << '<a id="append_date_link" href="#">[候補日の追加]</a>'
-      if event.event_fixed_date # 確定後
+      if event.date_fixed? # 確定後
         menus << link_to("[締切]", {:action => 'event_close', :eid => event.eid}, :confirm => "イベントを締め切ります。よろしいですか？")
       end
     else
@@ -195,7 +200,7 @@ module GroupHelper
     date_select_values = []
     @event.event_dates.each do |date|
       date_str = date.to_s_mmdd
-      date_str << " [開催日]" if @event.event_fixed_date and @event.event_fixed_date.event_date_id == date.id
+      date_str << " [開催日]" if date.fixed_date == true
       date_select_values << [date_str, date.id.to_s]
     end
     date_select_values
