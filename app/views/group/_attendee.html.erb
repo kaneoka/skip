@@ -1,0 +1,2 @@
+出席予定：<%= date.event_attendees.select{|at| at.state}.size -%>人　
+<%= show_attendees_state(date, attendee) -%>　

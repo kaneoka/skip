@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SKIP(Social Knowledge & Innovation Platform)
 # Copyright (C) 2008 TIS Inc.
 #
@@ -36,7 +37,7 @@ class GroupController < ApplicationController
                                         :order => "group_participations.updated_on DESC",
                                         :owned => false,
                                         :waiting => false
-    @recent_messages = BoardEntry.find_visible(10, login_user_symbols, @group.symbol)
+    @recent_messages = BoardEntry.find_visible(5, login_user_symbols, @group.symbol)
   end
 
   # tab_menu
@@ -359,6 +360,350 @@ class GroupController < ApplicationController
     redirect_to :action => 'manage', :menu => 'manage_participations'
   end
 
+  def event
+    @menu = params[:menu] || "event_list"
+    case @menu
+    when "event_new"
+      @event = Event.new
+
+      @event.event_dates << EventDate.new(:start_time => Time.now, :end_time => (Time.now + (60*60)))
+      params[:publication_type] = "public"
+    when "event_list"
+
+      condition_params = login_user_symbols + [Symbol::SYSTEM_ALL_USER]
+
+      @pages, @events = paginate(:events,
+                                 :per_page => 10,
+                                 :conditions => ["gid = ?",@group.gid],
+                                 :conditions => ["gid = ? and event_publications.symbol in (?)",@group.gid,condition_params],
+                                 :order => 'events.id desc',
+                                 :include => 'event_publication')
+      unless @events && @events.size > 0
+        flash.now[:notice] = 'イベントはありませんでした。'
+      end
+    when "event_edit"
+      if @event = Event.find_by_eid(params[:eid], :include => [:event_publication] )
+        params[:publication_type] = @event.event_publication.symbol == 'sid:allusers' ? 'public' :'private'
+      end
+    when "event_show"
+      if @event = Event.find_by_eid(params[:eid], :include => [:event_publication] )
+        group = Group.find_by_gid(@event.gid)
+
+        flash[:warning] ||= nil
+      else
+        flash[:warning] = "イベントはありませんでした"
+        redirect_to :action => "event", :menu => 'event_list'
+        return false
+      end
+
+      @admin_users = User.find(:all,
+                               :order=>"group_participations.updated_on DESC",
+                               :conditions=>["group_participations.group_id = ? and event_owners.event_id = ? ", group.id, @event.id],
+                               :include=>[:group_participations,:event_owners])
+      @users       = User.find(:all,
+                               :limit=>30,
+                               :order=>"group_participations.updated_on DESC",
+                               :conditions=>["group_participations.group_id = ?",group.id],
+                               :include=>[:group_participations])
+      @users -= @admin_users
+
+      @participation = group.group_participations.find_by_user_id(session[:user_id])
+      @owner = false
+      @owner = true if @event.event_owners.find_by_user_id(session[:user_id])
+
+    when "event_users"
+      @menu = "event_users"
+      @sort_types = sort_types
+      params[:date] ||=  ""
+      params[:include_absentee] ||= "participation"
+      params[:sort_type] ||= "code"
+
+      order_by = params[:sort_type]=="code" ? "user_uids.uid" : "group_participations.id"
+
+      @event = Event.find_by_eid(params[:eid])
+      group = Group.find_by_gid(@event.gid)
+      per_page = 30
+
+      conditions =["group_participations.group_id = ? ",group.id]
+
+      unless params[:include_absentee] == "participation"
+        #全参加者でないときは、出席情報、コメント情報を取得(必ず日付が指定されている)
+        event_date = @event.event_dates.find(params[:date])
+
+        if params[:include_absentee] == "attendee"
+          # 出席者のみ
+          conditions[0] << " and event_attendees.event_date_id = ?  and event_attendees.state = true"
+          conditions << params[:date]
+        end
+      end
+
+      @pages, @users = paginate(:user,
+                                :per_page => per_page,
+                                :conditions => conditions,
+                                :order_by => order_by,
+                                :include => [:user_uids, :group_participations, :user_profile,:event_owners, :event_attendees])
+    when "event_attendance"
+      @event = Event.find_by_eid(params[:eid])
+      group = Group.find_by_gid(@event.gid)
+
+      conditions = ["group_id = ? ",@group.id]
+
+      if params[:user_name]
+        conditions[0] << "and users.name like (?)"
+        conditions << "%" + params[:user_name] + "%"
+      end
+
+      event_date_ids = @event.event_dates.map{ |date| date.id }
+
+      @attendees_hash = { }
+      event_date_ids.each { |date_id| @attendees_hash[date_id] = { } }
+      EventAttendee.find(:all, :conditions => ["event_date_id in (?)", event_date_ids]).each do |attendee|
+        @attendees_hash[attendee.event_date_id][attendee.user_id] = attendee
+      end
+
+      @pages, @participations = paginate(:group_participation,
+                                         :per_page => 20,
+                                         :conditions => conditions,
+                                         :include => [:user])
+      @owner = false
+      @owner = true if @event.event_owners.find_by_user_id(session[:user_id])
+
+    when "event_manage_participations"
+
+      @event = Event.find_by_eid(params[:eid])
+      group = Group.find_by_gid(@event.gid)
+
+      @pages, @participations = paginate(:group_participations,
+                                         :per_page => 50,
+                                         :conditions => ["group_participations.group_id = ?", group.id],
+                                         :include => :user)
+    end
+
+    render :partial => @menu, :layout => true
+  end
+
+  def event_create
+    @event = Event.new(params[:event])
+    @event.acceptable = true
+    @event.gid = @group.gid
+
+    #候補日
+    params[:dates].each_value do |date|
+      @event.event_dates.build(:start_time => EventDate.get_date_from_params(date[:start]), :end_time => (EventDate.get_date_from_params date[:end]))
+    end
+
+    unless validate_params params, @event
+      @menu = "event_new"
+      render :partial => @menu, :layout => true
+      #render :action => "event", :menu => "event_new"
+      return
+    end
+
+    # 公開範囲
+    publication_symbol = params[:publication_type] == "public" ? "sid:allusers" : @group.symbol
+    @event.event_publication = EventPublication.new(:symbol => publication_symbol)
+
+    # 管理者(自分)
+    @event.event_owners.build(:user_id => session[:user_id])
+
+    # @eventをsaveすることで、候補日、公開範囲、ユーザ、制約全部一緒にDBに入る
+    if @event.save
+      if @event.event_dates.size == 1 # 候補日がひとつなら確定日に指定する
+        EventFixedDate.create(:event_id => @event.id, :event_date_id => @event.event_dates.first.id)
+        EventAttendee.create(:user_id => session[:user_id],
+                             :event_date_id => @event.event_dates.first.id,
+                             :state => true,
+                             :group_participation_id => GroupParticipation.find_by_user_id_and_group_id(session[:user_id],@group.id).id)
+      end
+
+      redirect_to :action => "event", :menu => 'event_show', :eid => @event.eid
+      return
+    else
+      @menu = "event_new"
+      render :partial => "event_new", :layout => true
+    end
+  end
+
+  def event_update
+    event = Event.find_by_eid(params[:eid], :include => [:event_publication] )
+    if event.update_attributes(params[:event])
+      redirect_to :action => 'event', :menu => "event_show", :eid => event.eid
+    else
+      @menu = "event_edit"
+      render :partial => "event_edit", :layout => true
+    end
+  end
+
+  def event_destroy
+    event = Event.find_by_id(params[:event_id], :include => [:event_publication] )
+    if event.destroy
+      flash[:notice] = 'イベントは削除されました。'
+      redirect_to :action => 'event'
+      return
+    else
+      flash[:notice] = 'イベントの削除に失敗しました。'
+    end
+    redirect_to :action => 'event', :menu => 'event_list'
+  end
+
+  def event_close
+    event = Event.find_by_eid(params[:eid])
+    event.update_attributes(:acceptable => false)
+    flash[:notice] = params[:message] || "締め切りました"
+    redirect_to :action => "event", :menu => "event_show", :eid => event.eid
+  end
+
+  # 締切解除（管理者のみ）
+  def event_unclose
+    event = Event.find_by_eid(params[:eid])
+    event.update_attributes(:acceptable => true)
+    flash[:notice] = "締め切りを解除しました"
+    redirect_to :action => "event", :menu => "event_show", :eid => event.eid
+  end
+
+  # キャンセル(締め切り後)
+  def event_cancel
+    change_attend_state(params[:user_id], params[:event_date_id], false)
+
+    flash[:notice] = "キャンセルしました。"
+  end
+
+
+  # 管理者に設定する
+  # ［操作可能］管理者のみ
+  # params = { :user_id => xxx, :manager => true/false（管理者にするかどうか） }
+  # success = 「管理者一覧画面」を表示
+  # failure = もとの画面を表示
+  def event_assign_user
+    event = Event.find_by_id(params[:event])
+    owner = false
+    owner = true if params[:owner] == "true"
+    if owner
+      EventOwner.destroy_all(["event_id = ? and user_id = ?",event.id,params[:user_id]])
+    else
+      EventOwner.create(:event_id => event.id, :user_id => params[:user_id])
+    end
+    flash[:notice] = "管理者情報を変更しました。"
+    redirect_to :action => 'event', :menu => 'event_manage_participations', :eid => event.eid
+  end
+
+  # 出席欠席状況の変更
+  def change_attend_state(eid, user_id, event_date_id, state)
+    @event = Event.find_by_eid(eid)
+    if event_attendee = EventAttendee.find_by_user_id_and_event_date_id(user_id, event_date_id)
+      event_attendee.update_attributes(:state => state) unless event_attendee.state == state
+    else
+        group_id = Group.find_by_gid(@event.gid).id
+        participation = GroupParticipation.find_by_user_id_and_group_id(user_id, group_id)
+        event_attendee = EventAttendee.create(:user_id => user_id, :group_participation_id => participation.id, :event_date_id => event_date_id, :state => state)
+    end
+    return event_attendee
+  end
+
+  # 確定（管理者のみ）
+  def fix_date
+    event = Event.find_by_eid(params[:eid])
+    event_date = EventDate.find(params[:event_date_id])
+    if fixed_date = EventFixedDate.find_by_event_id(event_date.event_id)
+      fixed_date.update_attributes(:event_date_id => event_date.id) unless fixed_date.event_date_id == event_date.id
+    else
+      fixed_date = EventFixedDate.create(:event_id => event_date.event_id, :event_date_id => event_date.id )
+    end
+
+    flash[:notice] = "確定しました"
+    redirect_to :action => "event", :menu => "event_show", :eid => event.eid
+  end
+
+  # 削除（管理者のみ）
+  def delete_date
+    event = Event.find_by_eid(params[:eid])
+    EventDate.find(params[:event_date_id]).destroy
+    event.save #eventのupdated_onを更新するためにeventをsaveする(キャッシュ生成用)
+    flash[:notice] = "候補日を削除しました"
+    redirect_to :action => "event", :menu => "event_show", :eid => event.eid
+  end
+
+  # 出席
+  def attend
+    event_attendee = change_attend_state(params[:eid], params[:user_id], params[:event_date_id], true)
+    render_attendee(event_attendee, params[:only_icon])
+  end
+
+  # 欠席
+  def absence
+    event_attendee = change_attend_state(params[:eid], params[:user_id], params[:event_date_id], false)
+    render_attendee(event_attendee, params[:only_icon])
+  end
+
+  # 出席、欠席の後にrenderする
+  def render_attendee(event_attendee, only_icon)
+    if only_icon
+      render :partial => 'attendee_icon', :locals => {:date => event_attendee.event_date, :attendee => event_attendee}
+    else
+      render :partial => 'attendee', :locals => {:event => @event, :date => event_attendee.event_date, :attendee => event_attendee}
+    end
+  end
+
+  def ado_update_attendee_comment
+
+    if params[:element_id]
+      split_params = params[:element_id].split('_')
+      participation_id ||= split_params[3]
+      date_id ||= split_params[2]
+    end
+    user_comment = EventDateUserComment.find_by_group_participation_id_and_event_date_id(participation_id, date_id)
+    unless params[:comment]
+      user_comment.destroy if user_comment
+      render :text => "　"
+      return
+    end
+
+    if user_comment
+      user_comment.update_attributes(:comment => params[:comment])
+    else
+      user_comment = EventDateUserComment.create(:user_id => session[:user_id],
+                                                 :event_date_id => date_id,
+                                                 :group_participation_id => participation_id,
+                                                 :comment => params[:comment])
+    end
+    # Inplaceエディタ内で直接ここで返した文字列を表示するためにHTMLエスケープする
+    render :text => ERB::Util.html_escape(user_comment.comment) || ""
+  end
+
+  # 候補日追加(管理者以外も可能)
+  def append_date
+
+    event = Event.find_by_eid(params[:event][:eid])
+
+    validate_error = false
+
+    # ありえない日付チェック
+    unless EventDate.valid_date?(params[:date][:start_time]) && EventDate.valid_date?(params[:date][:end_time])
+      flash[:warning] = "候補日の追加を再度行ってください。(存在する日付を指定してください）"
+      validate_error = true
+    end
+
+    # start、endの前後関係チェック
+    start_date = EventDate.get_date_from_params params[:date][:start_time]
+    end_date = EventDate.get_date_from_params params[:date][:end_time]
+    if start_date >= end_date
+      flash[:warning] = "候補日の追加を再度行ってください。(終了時刻は開始時刻以降の時間を設定してください）"
+      validate_error = true
+    end
+
+    # まったく同じ候補日のチェック(DBを見る)
+    if EventDate.find_by_event_id_and_start_time_and_end_time(event.id, start_date, end_date)
+      flash[:warning] = "候補日の追加を再度行ってください。(すでに同じ候補日が存在します。追加する場合は他の日付を指定してください）"
+      validate_error = true
+    end
+
+    unless validate_error
+      event.event_dates.build(:start_time => start_date, :end_time => end_date)
+      event.save #eventのupdated_onを更新するために@eventをsaveする(キャッシュ生成用)
+    end
+    redirect_to :action => "event", :menu => "event_show",:eid => event.eid
+
+  end
 
 private
   def setup_layout
@@ -372,7 +717,7 @@ private
     @tab_menu_source << ['新規投稿', 'new'] if participating?
     @tab_menu_source << ['ファイル', 'share_file']
     @tab_menu_source << ['管理', 'manage'] if participating? and @participation.owned?
-
+    @tab_menu_source << ['イベント','event']
     @tab_menu_option = { :gid => @group.gid }
   end
 
@@ -427,6 +772,44 @@ private
                                      :group => "user_id",
                                      :order => "count desc",
                                      :joins => joins_state)
+  end
+
+###イベント関連
+
+  # 独自のバリデーション（成功ならtrue）
+  def validate_params params, event
+    # 公開範囲のタイプ
+    unless %w(public private).include? params[:publication_type]
+      event.errors.add nil, "公開範囲の指定が不正です"
+    end
+
+    # 日付のフォーマットチェック
+    index = 1
+    last_join_dates = []
+    params[:dates].each_value do |date_hash|
+      if EventDate.valid_date?(date_hash[:start]) && EventDate.valid_date?(date_hash[:end])
+        date = EventDate.new(:start_time => EventDate.get_date_from_params(date_hash[:start]), :end_time => (EventDate.get_date_from_params date_hash[:end]))
+        # 開始時刻は終了時刻以前か
+        if date.start_time >= date.end_time
+          event.errors.add("候補日(#{index})の終了時刻", "は開始時刻以降の時間を設定してください")
+        end
+        # 同一の候補日を指定していないか
+        if last_join_dates.include?(date.start_time.to_s + date.end_time.to_s)
+          event.errors.add("", "同一の候補日が存在します")
+        end
+        last_join_dates << date.start_time.to_s + date.end_time.to_s
+      else
+        event.errors.add nil, "開催日/候補日#{index}に指定した存在しない日付を変換しました"
+      end
+      index = index + 1
+    end
+
+    event.errors.empty?
+  end
+
+  def sort_types
+    [ ['イベントに参加した順', "join"],
+      ["社員番号順", "code"] ]
   end
 
 end

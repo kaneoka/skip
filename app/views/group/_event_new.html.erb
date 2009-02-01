@@ -1,0 +1,133 @@
+<%= template_error_messages_for 'event' %>
+
+<div id="contents_container">
+
+  <div id="contents_left">
+
+    <div class="box_space">
+      <div class="box_space_title">メニュー</div>
+      <div class="box_space_body">
+        <ul>
+          <% get_events_menu_items(@menu).each do |menu_item| %>
+          <li><%= menu_item -%></li>
+          <% end %>
+        </ul>
+      </div>
+      <div class="box_space_bottom"></div>
+    </div><!-- box_space -->
+
+  </div><!-- contents_left -->
+
+  <div id="contents_right">
+
+    <% form_tag({:action => "event_create" }, :id=>'event_form') do -%>
+
+    <div class="input_line">
+      <div class="input_label">イベントID</div>
+      <div class="input_value">
+        <%= text_field 'event', 'eid', :size =>60 -%>
+      </div>
+      <div style="font-size:10px">
+        ※イベントIDは4文字以上で、数字orアルファベットor記号(ハイフン「-」 アンダーバー「_」)で入力してください。<br/>
+        ※イベントIDはのポータル内でイベントを識別する文字列としていろいろな場面で使いますので、分かりやすい文字列を選んでください。
+      </div>
+
+      <div class="input_line">
+        <div class="input_label">名称</div>
+        <div class="input_value"><%= text_field 'event', 'name', :size =>60 %></div>
+        <div style="clear: left"></div>
+      </div>
+
+      <div class="input_line">
+        <div id="dates_area"><% @event.event_dates.each_with_index do |date, index| -%><div>
+            <div style="margin-top:5px;">
+              <div class="input_label" id="dates_header" style="height: 35px;">開催日／<br/>候補日（<%= index+1 %>）</div>
+              開始時刻：<%= select_datetime  date.start_time, { :prefix => "dates[#{index}][start]",  :use_month_numbers => true, :minute_step => 15} -%><br/>
+              終了時刻：<%= select_datetime  date.end_time, { :prefix => "dates[#{index}][end]",  :use_month_numbers => true, :minute_step => 15} -%>
+              <div style="clear: left"></div>
+            </div>
+          </div><% end -%></div>
+        <div style="border-top: 1px dashed silver; margin-top: 5px;"><a id="append_date_link" href="#">[候補日を追加]</a><a id="remove_date_link" href="#" style="display:none">[候補日を削除]</a></div>
+      </div>
+    </div>
+
+    <div class="input_line">
+      <div class="input_label">説明</div><%= link_to_hiki_help %>
+      <div style="clear: left;"><%= text_area 'event', 'description', :cols => 60, :rows => 6  %></div>
+    </div>
+
+    <div class="input_line">
+      <div class="input_label">場所</div>
+      <div style="clear: left;"><%= text_area 'event', 'place', :cols => 60, :rows => 3  %></div>
+    </div>
+
+    <div class="input_line">
+      <div class="input_label" id="input_label_publication">公開範囲</div>
+      <div class="input_value" id="input_value_publication">
+        <%= radio_button_tag("publication_type", "public", params[:publication_type] == "public", :id=>"publication_type_public") -%>全体に公開
+        <%= radio_button_tag("publication_type", "private", params[:publication_type] == "private", :id=>"publication_type_private") -%>イベントの参加者のみ
+      </div>
+      <div style="clear: left"></div>
+
+    </div>
+
+    <p><%= submit_tag "作成" %></p>
+
+    <% end %>
+
+  </div><!-- contents_right -->
+
+  <div id="contents_bottom">
+  </div><!-- contents_bottom -->
+
+</div><!-- contents_container -->
+
+<div id="dates_template" style="display:none;">
+  <div style="margin-top:5px;">
+    <div class="input_label" id="dates_header" style="height: 35px;">開催日／<br/>候補日（XXX）<br/></div>
+    開始時刻：<%= select_datetime  Time.now, { :prefix => 'dates[xxx][start]',  :use_month_numbers => true, :minute_step => 15} -%><br/>
+    終了時刻：<%= select_datetime  Time.now + (60*60), { :prefix => 'dates[xxx][end]',  :use_month_numbers => true, :minute_step => 15} -%>
+    <div style="clear: left"></div>
+  </div>
+</div>
+
+<%= javascript_include_tag "jquery.inplace.js" %>
+<script type="text/javascript">
+$j(function() {
+
+    $j('#append_date_link')
+    .click(function() {
+        index = $j('#dates_area').children().length;
+        if(index >= 10) {
+            alert("候補日は10日分までしか追加できません。");
+            return false;
+        }
+
+        $j(document.createElement("div"))
+        .append($j('#dates_template').html().replace(/xxx/g, index).replace(/XXX/g, (index+1)))
+        .appendTo($j('#dates_area'));
+
+        setDeleteDateLinkVisibility();
+        return false;
+    });
+
+    $j('#remove_date_link')
+    .click(function() {
+        if ($j('#dates_area').children().length > 1) {
+            $j('#dates_area').children(':last-child').remove();
+        }
+        setDeleteDateLinkVisibility();
+        return false;
+    });
+
+    var setDeleteDateLinkVisibility = function() {
+        if ($j('#dates_area').children().length > 1) {
+            $j('#remove_date_link').show();
+        } else {
+            $j('#remove_date_link').hide();
+        }
+    };
+
+});
+
+</script>

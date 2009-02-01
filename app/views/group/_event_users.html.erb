@@ -1,0 +1,115 @@
+<div id="contents_container">
+
+    <div style="width: 98%;">
+      <h1 id="title"><%=h @event.name %></h1>
+    </div>
+
+  <div id="contents_left">
+
+    <div class="box_space">
+      <div class="box_space_title">メニュー</div>
+      <div class="box_space_body">
+        <ul>
+          <% get_event_menu_items(@menu,@event.eid).each do |menu_item| %>
+          <li><%= menu_item -%></li>
+          <% end %>
+        </ul>
+      </div>
+      <div class="box_space_bottom"></div>
+
+      <% if @event.owner?(session[:user_id]) %>
+      <div class="box_space_title">管理者メニュー</div>
+      <div class="box_space_body">
+        <ul>
+          <% get_event_manage_menu_items(@menu,@event.eid).each do |menu_item| %>
+          <li><%= menu_item -%></li>
+          <% end %>
+        </ul>
+      </div>
+      <div class="box_space_bottom"></div>
+      <% end %>
+    </div><!-- box_space -->
+
+  </div><!-- contents_left -->
+
+  <div id="contents_right">
+
+<div class="search_cond_space">
+  <% form_tag({:action => "event" }, :method => 'get') do -%>
+  <%= hidden_field_tag("menu","event_users") -%>
+  <%= hidden_field_tag("eid", @event.eid) -%>
+<table class="search_cond_box">
+  <tr>
+    <th>検索条件</th>
+    <td colspan="3">
+      <%= radio_button_tag('include_absentee',"attendee"  ,params[:include_absentee]=="attendee") -%> 出席者のみ
+      <%= radio_button_tag('include_absentee',"include_absentee"  ,params[:include_absentee]=="include_absentee") -%>　欠席者・未回答者含む
+      <%= radio_button_tag('include_absentee',"participation"  ,params[:include_absentee]=="participation") -%>　全参加者
+    </td>
+  </tr>
+  <tr id="date_select" style="display:none;">
+    <th>開催日</th>
+    <td colspan="3">
+      <%= selected_tag("date", params[:date], get_date_select_values(@event)) -%>
+    </td>
+  </tr>
+  <tr>
+    <th>ソート順</th>
+    <td><%= selected_tag "sort_type", params[:sort_type], @sort_types -%></td>
+  </tr>
+</table>
+<div class="submit"><%= submit_tag '検索' -%></div>
+<% end %>
+</div>
+
+<div class="search_result_space">
+
+<% if @pages and @pages.item_count > 0 -%>
+
+  <div class="navi"><%= page_link @pages -%></div>
+  <table border="1" class="normal" style="width:95%; overflow:hidden ; margin: 5px 10px; overflow:hidden;">
+    <th width="70px"></th><th width="100px">ユーザID</th><th width="100px">氏名</th><th width="70px">社員番号</th><th width="55px">部門</th><th width="70px">内線番号</th><th>Eメールアドレス</th></tr>
+    <% even_or_odd = 0 %>
+    <% for user in @users %>
+    <% even_or_odd = 1 - even_or_odd %>
+    <tr>
+      <td class="line_<%= even_or_odd -%>"><%= user_state(@event.owner? user) -%></td>
+      <td class="line_<%= even_or_odd -%>"><%=h user.uid %></td>
+      <td class="line_<%= even_or_odd -%>"><%=h user.name %></td>
+      <td class="line_<%= even_or_odd -%>"><%=h user.code %></td>
+      <td class="line_<%= even_or_odd -%>"><%=h user.profile.section %></td>
+      <td class="line_<%= even_or_odd -%>"><%=h user.profile.extension %></td>
+      <td class="line_<%= even_or_odd -%>"><%=h user.profile.email %></td>
+    </tr>
+    <% end %>
+  </table>
+  <div class="navi"><%= page_link @pages -%></div>
+
+<% end %>
+</div>
+
+</div><!-- contents_right -->
+
+<div id="contents_bottom">
+</div><!-- contents_bottom -->
+
+</div><!-- contents_container -->
+
+<script type="text/javascript">
+$j(function() {
+    $j('#include_absentee_attendee, #include_absentee_include_absentee')
+    .click(function() {
+        $j('#date_select').show();
+    });
+
+    $j('#include_absentee_participation')
+    .click(function() {
+        $j('#date_select').hide();
+    });
+
+    var includeAbsenteeIsParticipation = <%= params[:include_absentee] == "participation" -%>;
+    if (!includeAbsenteeIsParticipation) {
+        $j('#date_select').show();
+    }
+});
+</script>

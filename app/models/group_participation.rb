@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SKIP(Social Knowledge & Innovation Platform)
 # Copyright (C) 2008 TIS Inc.
 #
@@ -16,6 +17,10 @@
 class GroupParticipation < ActiveRecord::Base
   belongs_to :user
   belongs_to :group
+
+  belongs_to :event, :dependent => :destroy
+
+  has_many :event_date_user_comments, :dependent => :destroy
 
   N_('GroupParticipation|Waiting|true')
   N_('GroupParticipation|Waiting|false')

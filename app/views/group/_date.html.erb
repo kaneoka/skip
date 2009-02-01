@@ -1,0 +1,28 @@
+
+<% icon_name = 'bullet_blue'
+   background_color = 'white'
+   if fixed_date? event, date
+   icon_name = 'bullet_red'
+   background_color = '#FFE8FF'
+   end
+ -%>
+
+<% attendee = date.event_attendees.find_by_user_id(user_id) %>
+<tr style="background-color:<%= background_color -%>;">
+  <td width="30%"><% icon_tag(icon_name) -%><%= date -%></td>
+  <% if not event.finished? and event.participation?(user_id) %>
+  <td>
+    <% span_id = "attendee_state_[#{event.eid}][#{date.id}][#{session[:user_id]}]" -%>
+    <span id="<%= span_id -%>"><%= render :partial => 'attendee',
+      :locals => {:event => event, :date=> date, :attendee => attendee} -%>
+    </span>
+<%= generate_attendee_menu({:event => event, :date => date, :attendee => attendee, :user_id => session[:user_id]}) -%>
+  </td>
+
+  <td width="33%">
+    <%= render :partial => "editable_comment", :locals => {:date => date, :participation => @participation, :editable => true } -%>
+  </td>
+
+  <td width="15%"><%= generate_fixed_date_menu event, date, owned %></td>
+  <% end %>
+</tr>

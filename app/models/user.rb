@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SKIP(Social Knowledge & Innovation Platform)
 # Copyright (C) 2008 TIS Inc.
 #
@@ -32,6 +33,10 @@ class User < ActiveRecord::Base
   has_many :user_uids, :dependent => :destroy
 
   has_many :openid_identifiers
+
+  #イベント用に追加
+  has_many :event_owners, :dependent => :destroy
+  has_many :event_attendees
 
   validates_presence_of :name, :message => 'は必須です'
   validates_length_of :name, :maximum => 60, :message => 'は60桁以内で入力してください'

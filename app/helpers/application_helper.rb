@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SKIP(Social Knowledge & Innovation Platform)
 # Copyright (C) 2008 TIS Inc.
 #
@@ -357,4 +358,13 @@ private
     end
     output << "</span>"
   end
+
+  def event_link_to event, options = {}
+    output_text = ""
+    output_text << icon_tag('flag_blue') if options[:image_on]
+    output_text << (options[:view_text] || h(event.name))
+
+    link_to output_text, { :controller=>'group', :action=>'event', :menu => "event_show", :eid => event.eid}, options
+  end
+
 end

@@ -207,5 +207,50 @@ $j(function(){
         }
         return true;
     }
+
+    /*
+     * イベントの出席リンク押下
+     */
+    addAttendeeLinkClick = function(url, onlyIcon) {
+        $j('.attendee_link')
+        .click(function() {
+            attendanceAction(this, url, onlyIcon);
+            return false;
+        });
+    };
+
+    /*
+     * イベントの欠席リンク押下
+     */
+    addAbsenteeLinkClick = function(url, onlyIcon) {
+        $j('.absentee_link')
+        .click(function() {
+            attendanceAction(this, url, onlyIcon);
+            return false;
+        });
+    };
+
+    /*
+     * イベントの出欠リンクのajaxアクションを追加する関数
+     */
+    var attendanceAction = function(element, url, onlyIcon) {
+        var eventEId = element.id.split('_')[2];
+        var eventDateId = element.id.split('_')[3];
+        var userId = element.id.split('_')[4];
+        var updateElemId = 'attendee_state_\\[' + eventEId + '\\]\\[' + eventDateId + '\\]\\[' + userId + '\\]';
+        var params = {eid: eventEId, event_date_id: eventDateId, user_id: userId};
+        if(onlyIcon){
+            params['only_icon'] = onlyIcon;
+        }
+        $j.ajax({
+                url: url,
+                data: params,
+                complete: function(request) {
+                    $j('#' + updateElemId).html(request.responseText);
+                    //                    fnLoadPngs();
+                }
+            });
+    };
+
 });
 

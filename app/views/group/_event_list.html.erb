@@ -1,0 +1,49 @@
+<div id="contents_container">
+
+  <div id="contents_left">
+
+    <div class="box_space">
+      <div class="box_space_title">メニュー</div>
+      <div class="box_space_body">
+        <ul>
+          <% get_events_menu_items(@menu).each do |menu_item| %>
+          <li><%= menu_item -%></li>
+          <% end %>
+        </ul>
+      </div>
+      <div class="box_space_bottom"></div>
+    </div><!-- box_space -->
+
+  </div><!-- contents_left -->
+
+  <div id="contents_right">
+
+    <% if @pages and @pages.item_count > 0 -%>
+
+    <div class="navi"><%= page_link @pages -%></div>
+
+    <table class="event_box" border="1">
+      <tr>
+        <th>タイトル</th>
+        <th>開催日時</th>
+        <th>場所</th>
+      </tr>
+         <% for event in @events %>
+      <tr>
+        <td><%= event_link_to event %></td>
+        <td><%=h event.event_fixed_date ? event.holdingDatetime : "開催日が確定していません" %></td>
+        <td><div class="hiki_style"><%= event.place %></td>
+      </tr>
+      <% end %>
+    </table>
+
+    <div class="navi"><%= page_link @pages -%></div>
+
+    <% end %>
+
+</div><!-- contents_right -->
+
+<div id="contents_bottom">
+</div><!-- contents_bottom -->
+
+</div><!-- contents_container -->
