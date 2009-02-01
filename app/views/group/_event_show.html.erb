@@ -84,7 +84,8 @@
           </tr>
           <% end %>
           <tr>
-            <th>説明</th><td><div class="hiki_style"><%= hiki_parse(@event.description, @event.symbol) %></div></td>
+            <th>説明</th>
+	    <td><%= render_richtext(@event.description, @event.symbol) -%></div></td>
           </tr>
           <tr>
             <th>場所</th><td><div class="hiki_style"><%= hiki_parse(@event.place, @event.symbol) %></div></td>

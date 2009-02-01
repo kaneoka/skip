@@ -23,13 +23,11 @@
         ※イベントIDは4文字以上で、数字orアルファベットor記号(ハイフン「-」 アンダーバー「_」)で入力してください。<br/>
         ※イベントIDはのポータル内でイベントを識別する文字列としていろいろな場面で使いますので、分かりやすい文字列を選んでください。
       </div>
-
       <div class="input_line">
         <div class="input_label">名称</div>
         <div class="input_value"><%= text_field 'event', 'name', :size =>60 %></div>
         <div style="clear: left"></div>
       </div>
-
       <div class="input_line">
         <div id="dates_area"><% @event.event_dates.each_with_index do |date, index| -%><div>
             <div style="margin-top:5px;">
@@ -44,13 +42,13 @@
     </div>
 
     <div class="input_line">
-      <div class="input_label">説明</div><%= link_to_hiki_help %>
-      <div style="clear: left;"><%= text_area 'event', 'description', :cols => 60, :rows => 6  %></div>
+      <div class="input_label">説明</div>
+      <div class="input_value" style="clear: left;"><%= text_area :event, :description, :class => 'invisible' %></div>
     </div>
 
     <div class="input_line">
       <div class="input_label">場所</div>
-      <div style="clear: left;"><%= text_area 'event', 'place', :cols => 60, :rows => 3  %></div>
+        <div class="input_value"><%= text_field 'event', 'place', :size =>60 %></div>
     </div>
 
     <div class="input_line">
@@ -82,16 +80,17 @@
 </div>
 
 <%= javascript_include_tag "jquery.inplace.js" %>
+<%= skip_javascript_include_tag "fckeditor/fckeditor" %>
 <script type="text/javascript">
-$j(function() {
-
-    $j('#append_date_link')
-    .click(function() {
-        index = $j('#dates_area').children().length;
-        if(index >= 10) {
-            alert("候補日は10日分までしか追加できません。");
-            return false;
-        }
+  $j(function() {
+  
+  $j('#append_date_link')
+  .click(function() {
+  index = $j('#dates_area').children().length;
+  if(index >= 10) {
+  alert("候補日は10日分までしか追加できません。");
+  return false;
+  }
 
         $j(document.createElement("div"))
         .append($j('#dates_template').html().replace(/xxx/g, index).replace(/XXX/g, (index+1)))
@@ -116,8 +115,10 @@ $j(function() {
         } else {
             $j('#remove_date_link').hide();
         }
-    };
+};
+
+     FCKeditor.BasePath = platform_url_root + "/javascripts/skip/fckeditor/";
+     new FCKeditor('event_description', '98%', '350', 'Normal').ReplaceTextarea();
 
 });
-
 </script>

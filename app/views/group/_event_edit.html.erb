@@ -49,24 +49,21 @@
 
   <div class="input_line">
     <div class="input_label">イベントID</div>
-    <div class="input_value">
-      <%= @event.eid -%>
-    </div>
+    <div class="input_value"><%= @event.eid -%></div>
   </div>
 
   <div class="input_line">
     <div class="input_label">名称</div>
     <div class="input_value"><%= text_field 'event', 'name', :size =>60 %></div>
   </div>
-
   <div class="input_line">
-    <div class="input_label">説明</div> <%= link_to_hiki_help %>
-    <%= text_area 'event', 'description', :cols => 60, :rows => 6  %>
+    <div class="input_label">説明</div>
+      <div  class="input_value" ><%= text_area :event, :description, :class => 'invisible' %></div>
   </div>
 
   <div class="input_line">
     <div class="input_label">場所</div>
-    <%= text_area 'event', 'place', :cols => 60, :rows => 3  %>
+    <%= text_field 'event', 'place', :cols => 60 %>
   </div>
 
   <div class="input_line">
@@ -90,3 +87,13 @@
 </div><!-- contents_bottom -->
 </div><!-- event_panel -->
 </div><!-- contents_container -->
+
+<%= skip_javascript_include_tag "fckeditor/fckeditor" %>
+<script type="text/javascript">
+  $j(function() {
+
+     FCKeditor.BasePath = platform_url_root + "/javascripts/skip/fckeditor/";
+     new FCKeditor('event_description', '98%', '350', 'Normal').ReplaceTextarea();
+
+});
+</script>
