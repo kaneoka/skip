@@ -539,7 +539,7 @@ class GroupController < ApplicationController
     event = Event.find(params[:event_id])
     event.update_attributes(:acceptable => false)
     flash[:notice] = params[:message] || "締め切りました"
-    redirect_to :action => "event", :menu => "event_show", :eid => event.eid
+    redirect_to :action => "event", :menu => "event_show", :event_id => event.id
   end
 
   # 締切解除（管理者のみ）

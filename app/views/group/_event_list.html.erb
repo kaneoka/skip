@@ -12,29 +12,63 @@
 
     <div class="navi"><%= page_link @pages -%></div>
 
-    <table class="event_box" border="1" style="width:85%; overflow:hidden ; margin: 5px 10px; overflow:hidden;">
+    <table class="event_list_box normal">
+      <% for event in @events %>
+      <% unless event.past_event? %>
       <tr>
-        <th  width="70px"></th>
-        <th width="150px">名称</th>
-        <th width="250px">開催日時</th>
-        <th>場所</th>
-        <th>幹事</th>
-        <th>出席人数</th>
+        <td rowspan="5" bgcolor="lightyellow"><%= event.past_event? ? "過去" : "開催予定" %></td>
+        <td width="30%" rowspan="5"><%= event_link_to event %></td>
       </tr>
-         <% for event in @events %>
-
-      <tr <% if event.past_event? %> bgcolor="pink" <% end %>>
-        <td><%= event.past_event? ? "過去" : "開催予定" %></td>
-        <td><%= event_link_to event %></td>
-        <td><%=h event.date_fixed? ? event.holdingDatetime : "開催日が確定していません" %></td>
+      <tr>
+        <th width="10%">開催日時</th>
+        <td width="75%"><%=h event.date_fixed? ? event.holdingDatetime : "開催日が確定していません" %></td>
+      </tr>
+      <tr>
+        <th >場所</th>
         <td><div class="hiki_style"><%= event.place %></td>
-        <td><%= event.event_admin_users %>
-	</td>
+      </tr>
+      <tr>
+        <th>幹事</th>
+        <td><%= event.event_admin_users %></td>
+      </tr>
+      <tr>
+        <th>出席人数</th>
 	<td><% if event.date_fixed? %>
 	  <%= event.holding_date.event_attendees.select{|at| at.state == "attend" }.size -%>人
 	  <% end %>
 	</td>
       </tr>
+      <% end %>
+      <% end %>
+    </table>
+
+    <table class="event_list_box normal">
+      <% for event in @events %>
+      <% if event.past_event? %>
+      <tr>
+        <td rowspan="5" bgcolor="pink"><%= event.past_event? ? "過去" : "開催予定" %></td>
+        <td width="30%" rowspan="5"><%= event_link_to event %></td>
+      </tr>
+      <tr>
+        <th width="10%">開催日時</th>
+        <td width="75%"><%=h event.date_fixed? ? event.holdingDatetime : "開催日が確定していません" %></td>
+      </tr>
+      <tr>
+        <th >場所</th>
+        <td><div class="hiki_style"><%= event.place %></td>
+      </tr>
+      <tr>
+        <th>幹事</th>
+        <td><%= event.event_admin_users %></td>
+      </tr>
+      <tr>
+        <th>出席人数</th>
+	<td><% if event.date_fixed? %>
+	  <%= event.holding_date.event_attendees.select{|at| at.state == "attend" }.size -%>人
+	  <% end %>
+	</td>
+      </tr>
+      <% end %>
       <% end %>
     </table>
 
