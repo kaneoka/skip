@@ -48,7 +48,9 @@ module GroupHelper
       state << "締め切られています"
     end
     state << "</div>"
-
+    state << "<div style='margin-bottom:5px;'>"
+    state <<  generate_owner_menus(event) if event.participation?(user_id) && owner
+    state << "</div>"
     if event.participation?(user_id)
       state << (owner ? '幹事です！' : '参加中です！')
     end
@@ -168,14 +170,14 @@ module GroupHelper
     event.event_dates && date.fixed_date == true
   end
 
-  def generate_owner_menus event
+  def generate_owner_menus event 
     menus = ""
     if event.acceptable # 締切前
       if event.date_fixed? # 確定後
-        menus << link_to("[締切]", {:action => 'event_close', :event_id => event.id}, :confirm => "イベントを締め切ります。よろしいですか？")
+        menus << link_to("[イベントを締切る]", {:action => 'event_close', :event_id => event.id}, :confirm => "イベントを締め切ります。よろしいですか？")
       end
     else
-      menus << link_to("[締切解除]", {:action => 'event_unclose', :event_id => event.id}, :confirm => "イベントの締め切りを解除しますが、よろしいですか？")
+      menus << link_to("[締切を解除する]", {:action => 'event_unclose', :event_id => event.id}, :confirm => "イベントの締め切りを解除しますが、よろしいですか？")
     end
     menus
   end
