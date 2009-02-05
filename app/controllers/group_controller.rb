@@ -28,6 +28,11 @@ class GroupController < ApplicationController
                     :ado_set_favorite, :toggle_owned, :forced_leave_user, :append_user ],
          :redirect_to => { :action => :show }
 
+  verify :method => :post,
+         :only => [ :event_destroy, :event_close, :event_unclose, :event_cancel,
+                    :fix_date, :delete_date, :append_date],
+         :redirect_to => { :action => :event }
+
   # tab_menu
   def show
     @admin_users = @group.participation_users :order => "group_participations.updated_on DESC",

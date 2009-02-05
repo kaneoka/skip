@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ActionController::Routing::Routes.draw do |map|
 
   map.root    :controller => 'mypage', :action => 'index'
@@ -14,7 +15,19 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'user/:uid/:action',
               :controller => 'user',
               :defaults => { :action => 'show' }
+###イベント用に追加
+  map.connect 'group/:gid/event/:menu/:event_id',
+              :controller => 'group', 
+              :action => 'event'
 
+  map.connect 'group/:gid/event/:menu',
+              :controller => 'group', 
+              :action => 'event'
+
+  map.connect 'group/:gid/:action/:event_id',
+              :controller => 'group',
+              :defaults => { :action => 'event' }
+###
   map.connect 'group/:gid/:action',
               :controller => 'group',
               :defaults => { :action => 'show' }
