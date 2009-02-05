@@ -98,10 +98,13 @@
        .append($j('#dates_template').html().replace(/xxx/g, index).replace(/XXX/g, (index+1)))
        .appendTo($j('#dates_area'));
 
+        setup();
+
         setDeleteDateLinkVisibility();
         return false;
 
-    });  
+    });
+
 
     $j('#remove_date_link')
     .click(function() {
@@ -118,8 +121,10 @@
         } else {
             $j('#remove_date_link').hide();
         }
-};
+    };
 
+  var setup = function(){
+   $j('.datepicker' ).datepicker("destroy");
    $j('.datepicker' ).datepicker(
         $j.extend({},
             $j.datepicker.regional['<%= GetText.locale.to_s %>'],
@@ -131,6 +136,9 @@
             }
         )
     );
+  };
+
+  setup();
 
      FCKeditor.BasePath = platform_url_root + "/javascripts/skip/fckeditor/";
      new FCKeditor('event_description', '98%', '350', 'Normal').ReplaceTextarea();
