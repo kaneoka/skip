@@ -598,14 +598,34 @@ class GroupController < ApplicationController
     event = Event.find(params[:event_id])
     event_dates = EventDate.find_all_by_event_id(event.id)
 
-    event_dates.each do |event_date|
+    fixed_event_date = EventDate.find(params[:event_date_id]);
 
+    event_dates.each do |event_date|
       if event_date.id == params[:event_date_id].to_i
         event_date.update_attributes(:fixed_date => true )
       elsif event_date.fixed_date == true
         event_date.update_attributes(:fixed_date => false )
       end
     end
+
+    # 開催日確定連絡(参加者あて)
+    entry_params = { }
+    entry_params[:title] ="【#{event.name}】開催日を確定しました"
+    entry_params[:message] = "以下の日程でイベントを開催します。みなさんの参加をお待ちしています。"
+    entry_params[:message] << BoardEntry::LINE_FEED
+    entry_params[:message] << fixed_event_date.start_time.strftime("%Y/%m/%d %H:%M") + "～"
+    entry_params[:message] << fixed_event_date.end_time.strftime("%Y/%m/%d %H:%M")
+    entry_params[:message] << BoardEntry::LINE_FEED + "(出席連絡をされていない方はお早めに。)"
+    entry_params[:tags] = "#{Tag::NOTICE_TAG},開催日確定"
+    entry_params[:user_symbol] = session[:user_symbol]
+    entry_params[:user_id] = session[:user_id]
+    entry_params[:entry_type] = BoardEntry::GROUP_BBS
+    entry_params[:owner_symbol] = @group.symbol
+    entry_params[:publication_type] = 'private'
+    entry_params[:publication_symbols] = [session[:user_symbol]]
+    entry_params[:publication_symbols] << @group.symbol
+
+    entry = BoardEntry.create_entry(entry_params)
 
     flash[:notice] = "確定しました"
     redirect_to :action => "event", :menu => "event_show", :event_id => event.id
