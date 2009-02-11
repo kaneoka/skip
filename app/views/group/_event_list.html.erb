@@ -8,16 +8,27 @@
       </ul>
     </div>
   <div id="event_panel">
+
+    <% form_tag({:action => "event"}, {:method => :get}) do %>
+    <%= text_field_tag('keyword', params[:keyword], :size=>'10') %>
+    <%= submit_tag "検索" %><br/>
+    <%= check_box_tag("include_past_event","true",params[:include_past_event]) %>過去のイベントを含めて表示
+    <% end %>
+
   <% if @pages and @pages.item_count > 0 -%>
 
     <div class="navi"><%= page_link @pages -%></div>
 
     <table class="event_list_box normal">
+      <h2>開催日確定のイベント</h2>
       <% for event in @events %>
-      <% unless event.past_event? %>
+      <% if event.date_fixed? %>
       <tr>
-        <td rowspan="5" bgcolor="lightyellow"><%= event.past_event? ? "過去" : "開催予定" %></td>
-        <td width="30%" rowspan="5"><%= event_link_to event %></td>
+	<% if event.past_event? %>
+        <td width="30%" rowspan="5" bgcolor="black"><%= event_link_to event %></td>
+	<% else %>
+        <td width="30%" rowspan="5" bgcolor="lightyellow"><%= event_link_to event %></td>
+	<% end %>
       </tr>
       <tr>
         <th width="10%">開催日時</th>
@@ -43,11 +54,15 @@
     </table>
 
     <table class="event_list_box normal">
+      <h2>開催日未確定のイベント</h2>
       <% for event in @events %>
-      <% if event.past_event? %>
+      <% unless event.date_fixed? %>
       <tr>
-        <td rowspan="5" bgcolor="pink"><%= event.past_event? ? "過去" : "開催予定" %></td>
-        <td width="30%" rowspan="5"><%= event_link_to event %></td>
+	<% if event.past_event? %>
+        <td width="30%" rowspan="5" bgcolor="black"><%= event_link_to event %></td>
+	<% else %>
+        <td width="30%" rowspan="5" bgcolor="pink"><%= event_link_to event %></td>
+	<% end %>
       </tr>
       <tr>
         <th width="10%">開催日時</th>

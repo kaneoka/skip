@@ -374,12 +374,24 @@ class GroupController < ApplicationController
       @event.event_dates << EventDate.new(:start_time => Time.now, :end_time => (Time.now + (60*60)))
       params[:publication_type] = "public"
     when "event_list"
-
       condition_params = login_user_symbols + [Symbol::SYSTEM_ALL_USER]
+      conditions =["gid = ? and publication_symbol in (?)",@group.gid,condition_params]
+
+      unless params[:include_past_event] 
+#        conditions[0] << "and fixed_date = ? and end_time > ? "
+        conditions[0] << "and end_time > ? "
+#        conditions << true
+        conditions << Time.now
+      end
+
+      if params[:keyword]
+        conditions[0] << "and name like ?"
+        conditions << "%" + params[:keyword] + "%"
+      end
 
       @pages, @events = paginate(:events,
                                  :per_page => 10,
-                                 :conditions => ["gid = ? and publication_symbol in (?)",@group.gid,condition_params],
+                                 :conditions => conditions,
                                  :order => ['event_dates.fixed_date desc , event_dates.end_time desc'],
                                  :include => ['event_dates'])
       unless @events && @events.size > 0

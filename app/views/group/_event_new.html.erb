@@ -50,7 +50,7 @@
       <div class="input_label" id="input_label_publication">公開範囲</div>
       <div class="input_value" id="input_value_publication">
         <%= radio_button_tag("publication_type", "public", params[:publication_type] == "public", :id=>"publication_type_public") -%>全体に公開
-        <%= radio_button_tag("publication_type", "private", params[:publication_type] == "private", :id=>"publication_type_private") -%>イベントの参加者のみ
+        <%= radio_button_tag("publication_type", "private", params[:publication_type] == "private", :id=>"publication_type_private") -%>グループの参加者のみ
       </div>
       <div style="clear: left"></div>
 
