@@ -29,7 +29,7 @@ class GroupController < ApplicationController
          :redirect_to => { :action => :show }
 
   verify :method => :post,
-         :only => [ :event_destroy, :event_close, :event_unclose, :event_cancel,
+         :only => [ :event_destroy, :event_cancel,
                     :fix_date, :delete_date, :append_date],
          :redirect_to => { :action => :event }
 
