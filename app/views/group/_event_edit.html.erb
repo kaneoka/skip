@@ -1,7 +1,5 @@
 <div id="contents_container">
 
-  <div id="event_panel">
-
   <div id="contents_left">
 
     <div class="box_space">
@@ -9,7 +7,7 @@
       <div class="box_space_body">
         <ul>
 	  <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
-          <li><%= menu_item -%></li>
+          <li><%= menu_item %></li>
           <% end %>
         </ul>
       </div>
@@ -20,7 +18,7 @@
 
   <div id="contents_right">
 
-  <% form_tag({:action => :event_update, :event_id => @event.id}) do -%>
+  <% form_tag({:action => :event_update, :event_id => @event.id}) do %>
   <%= template_error_messages_for 'event' %>
 
     <div class="input_line">
@@ -45,8 +43,8 @@
   <div class="input_line">
     <div class="input_label" id="input_label_publication">公開範囲</div>
     <div class="input_value" id="input_value_publication">
-      <%= radio_button_tag("publication_type", "public", params[:publication_type] == "public", :id=>"publication_type_public") -%>全体に公開
-      <%= radio_button_tag("publication_type", "private", params[:publication_type] == "private", :id=>"publication_type_private") -%>グループの参加者のみ
+      <%= radio_button_tag("publication_type", "public", params[:publication_type] == "public", :id=>"publication_type_public") %>全体に公開
+      <%= radio_button_tag("publication_type", "private", params[:publication_type] == "private", :id=>"publication_type_private") %>グループの参加者のみ
     </div>
   </div>
 
@@ -62,7 +60,6 @@
 
 <div id="contents_bottom">
 </div><!-- contents_bottom -->
-</div><!-- event_panel -->
 </div><!-- contents_container -->
 
 <%= skip_javascript_include_tag "fckeditor/fckeditor" %>

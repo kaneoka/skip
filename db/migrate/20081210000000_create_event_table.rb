@@ -10,6 +10,10 @@ class CreateEventTable < ActiveRecord::Migration
       t.string   "comment"
     end
 
+    add_index(:event_attendees, :user_id)
+    add_index(:event_attendees, :event_date_id)
+    add_index(:event_attendees, :group_participation_id)
+
     create_table "event_dates" do |t|
       t.integer  "event_id",   :null => false
       t.datetime "start_time", :null => false
@@ -17,6 +21,8 @@ class CreateEventTable < ActiveRecord::Migration
       t.boolean  "fixed_date", :null => false
       t.datetime "updated_on", :null => false
     end
+
+    add_index(:event_dates, :event_id)
 
     create_table "events" do |t|
       t.datetime "created_on"
@@ -29,12 +35,17 @@ class CreateEventTable < ActiveRecord::Migration
       t.string   "publication_symbol",         :default => "", :null => false
     end
 
+    add_index(:events, :gid)
+
     create_table "event_owners" do |t|
       t.datetime "created_on"
       t.datetime "updated_on"
       t.integer  "event_id",                      :null => false
       t.integer  "user_id",                       :null => false
     end
+
+    add_index(:event_owners, :event_id)
+    add_index(:event_owners, :user_id)
 
   end
 

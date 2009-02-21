@@ -1,7 +1,5 @@
 <div id="contents_container">
 
-  <div id="event_panel">
-
   <div id="contents_left">
 
     <div class="box_space">
@@ -9,7 +7,7 @@
       <div class="box_space_body">
         <ul>
 	  <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
-          <li><%= menu_item -%></li>
+          <li><%= menu_item %></li>
           <% end %>
         </ul>
       </div>
@@ -21,11 +19,11 @@
   <div id="contents_right">
 
     <div class="input_line">
-      <h1 id="title" hight="10px"><%= event_link_to @event -%>
+      <h1 id="title" hight="10px"><%= event_link_to @event %>
       <span style="font-size: 12px; padding-left: 20px;">
       <% if @event.owner?(session[:user_id]) %>
       <% get_event_manage_menu_items(@menu,@event.id).each do |menu_item| %>
-      <%= menu_item -%>
+      <%= menu_item %>
       <% end %>
       <% end %>
       </span>
@@ -33,12 +31,12 @@
     </div>
 
     <div class="desc" style="margin-bottom: 10px;">
-      <% state = generate_event_visitor_state(@event, @participation, @owner, session[:user_id]) -%>
-      <%= state -%>
-      <% informations = generate_event_informations(@event, @participation, @owner) -%>
-    <% unless informations.empty? -%>
-        <% informations.each do |information| -%>
-        <div class="event_info_space_lines_line"><%= information -%></div>
+      <% state = generate_event_visitor_state(@event, @participation, @owner, session[:user_id]) %>
+      <%= state %>
+      <% informations = generate_event_informations(@event, @participation, @owner) %>
+    <% unless informations.empty? %>
+        <% informations.each do |information| %>
+        <div class="event_info_space_lines_line"><%= information %></div>
         <% end %>
     <% end %>
   </div>
@@ -50,52 +48,52 @@
     <div class="input_line">  
       
       <div class="input_label">場所</div>
-      <div class="hiki_style"><%= hiki_parse(@event.place, @event.symbol) %></div>
+      <%=h @event.place %>
   </div>
 
   <%= hidden_field_tag("authenticity_token", form_authenticity_token) %>
   <div class="event_info_space">
     <h2 class="topix_title"><%= icon_tag('asterisk_orange') %>開催日/候補日の調整</h2>
       <div id="admin_menu" style="margin-top: 5px; padding: 5px; font-weight: bold;">
-	<%= link_to("[みんなの出席状況を見る]", :action => :event, :menu => :event_users, :event_id => @event.id ) -%>
+	<%= link_to("[みんなの出席状況を見る]", :action => :event, :menu => :event_users, :event_id => @event.id ) %>
       </div>
     <div class="event_info_space_desc">
       <table style="width: 100%; border: 1px sold silver" id="event_dates">
         <%= render :partial => 'date', :collection => @event.event_dates, :locals => { :event => @event,
         :user_id => session[:user_id],
-        :owned => @owner} -%>
+        :owned => @owner} %>
       </table>
             
       <div id="append_date_space" style="border: 1px dashed silver; margin-top: 5px; padding: 5px; display: none;">
         <div style="margin-bottom:5px">
-          <% form_tag(:action => 'append_date') do -%>
-          <%= hidden_field("event","id") -%>
+          <% form_tag(:action => 'append_date') do %>
+          <%= hidden_field("event","id") %>
 	  
-          開始時刻：<%= text_field_tag "start_date", Time.now.strftime('%Y/%m/%d'), :maxlength => 15, :class => 'datepicker' -%>
-          <%= select("date", "start_time", time_options, {:selected => Time.now.strftime('%H') + ":00" }, {:style => "width: 100px;"}) -%>
+          開始時刻：<%= text_field_tag "start_date", Time.now.strftime('%Y/%m/%d'), :maxlength => 15, :class => 'datepicker' %>
+          <%= select("date", "start_time", time_options, {:selected => Time.now.strftime('%H') + ":00" }, {:style => "width: 100px;"}) %>
           <br/>
-          終了時刻：<%= text_field_tag "end_date", Time.now.strftime('%Y/%m/%d'), :maxlength => 15, :class => 'datepicker' -%>
-          <%= select("date", "end_time", time_options, {:selected => (Time.now + (60*60)).strftime('%H') + ":00" }, {:style => "width: 100px;"}) -%>
+          終了時刻：<%= text_field_tag "end_date", Time.now.strftime('%Y/%m/%d'), :maxlength => 15, :class => 'datepicker' %>
+          <%= select("date", "end_time", time_options, {:selected => (Time.now + (60*60)).strftime('%H') + ":00" }, {:style => "width: 100px;"}) %>
 	  
         </div>
         <p><%= submit_tag '追加' %>　<input id="cancel_button" type="button" value="キャンセル"/></p>
-        <% end -%>
+        <% end %>
       </div>
       <% if @participation %>
       <div id="append_date_menu" style="border: 1px dashed silver; margin-top: 5px; padding: 5px; ">
-        <%= generate_date_menu(@event, @participation, @owner) -%>
+        <%= generate_date_menu(@event, @participation, @owner) %>
       </div>
       <% end %>
 
   </div><!-- event_info_space -->
 
-  <div class="group_info_space">
+  <div class="event_info_space">
     <h2 class="topix_title"><%= icon_tag('asterisk_orange') %>このイベントについて</h2>
-    <div class="group_info_space_desc">
+    <div class="event_info_space_desc">
     </div>
-      <div class="group_info_space_desc_body"><%= render_richtext(@event.description, @event.symbol) -%></div>
+      <div class="event_info_space_desc_body"><%= render_richtext(@event.description, @event.symbol) %></div>
 
-  </div><!-- group_info_space -->
+  </div><!-- event_info_space -->
         
     <div class="input_line">
       <div class="input_label">幹事</div>
@@ -108,7 +106,6 @@
   
   </div><!-- contents_right -->
   
-</div><!-- event_panel -->
 </div><!-- summary_container -->
 
 <%= skip_javascript_include_tag "fckeditor/fckeditor" %>
@@ -119,7 +116,7 @@
 
 <script type="text/javascript">
 $j(function() {
-    var post_comment_url = "<%= url_for(:action => :ado_update_attendee_comment) -%>";
+    var post_comment_url = "<%= url_for(:action => :ado_update_attendee_comment) %>";
     $j('.editable_comment').editInPlace({
         url: post_comment_url,
         params: 'authenticity_token='+$j('#authenticity_token').val(),
@@ -131,7 +128,7 @@ $j(function() {
 
     $j('#append_date_link')
     .click(function() {
-        var event_dates_size = <%= @event.event_dates.size -%>;
+        var event_dates_size = <%= @event.event_dates.size %>;
         if (event_dates_size >= 10) {
             alert("候補日は10日分までしか追加できません。");
             return false;

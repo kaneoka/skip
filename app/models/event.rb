@@ -46,28 +46,24 @@ class Event < ActiveRecord::Base
 
   def participation? user_id
     group = Group.find_by_gid(self.gid)
-    result = false
-    result = true if group.group_participations.find_by_user_id(user_id)
-    return result
+    group.group_participations.find_by_user_id(user_id) ? true : false
   end
 
   def past_event?(current_date = Time.now)
-    result = false
     if self.date_fixed?
-      result = true if self.holding_date.end_time < current_date
+      self.holding_date.end_time < current_date ? true : false
     else
-      result = true if event_dates.map{|date| date.end_time}.max < current_date
+      event_dates.map{|date| date.end_time}.max < current_date ? true : false
     end
-    return result
   end
 
-  def fixed_date_or_last_candidate_date
-    if date_fixed?
-      result = self.holding_date.end_time
-    else
-      result = event_dates.map{|date| date.end_time}.max
-    end
-  end
+#   def fixed_date_or_last_candidate_date
+#     if date_fixed?
+#       result = self.holding_date.end_time
+#     else
+#       result = event_dates.map{|date| date.end_time}.max
+#     end
+#   end
 
    def symbol_id
      gid

@@ -128,22 +128,6 @@ module GroupHelper
     menu_items
   end
 
-  def get_event_menu_items selected_menu, event_id
-    menus = [{:name => "イベントサマリ", :menu => "event_show" },
-             {:name => "出席情報", :menu => "event_users" }]
-
-    menu_items = []
-    menus.each do |menu|
-      if menu[:menu] == selected_menu
-        menu_items << icon_tag('bullet_red') + "<b>#{menu[:name]}</b>"
-      else
-        link_to_params = { :action => "event", :menu => menu[:menu], :event_id => event_id }
-        menu_items << icon_tag('bullet_blue') + link_to(menu[:name], link_to_params, :confirm => menu[:confirm])
-      end
-    end
-    menu_items
-  end
-
   def get_event_manage_menu_items selected_menu, event_id
     menus = [{:name => "[イベントを編集する]", :menu => "event_edit" } ]
 
@@ -196,14 +180,14 @@ module GroupHelper
       ""
     else
       case attendee.state
-        when "attend"
+      when "attend"
         icon_tag('emoticon_happy') + "出席"
-        when "absence"
+      when "absence"
         icon_tag('cross') + "欠席"
       end
     end
   end
-
+  
   # 指定日がイベントの開催日か否か
   def fixed_date? event, date
     event.event_dates && date.fixed_date == true
@@ -229,15 +213,15 @@ module GroupHelper
     menu
   end
 
-  def user_state owner
-    output = ""
-    if owner
-      output << icon_tag('star') + '幹事'
-    else
-      output << icon_tag('user') + '参加者'
-    end
-    output
-  end
+#   def user_state owner
+#     output = ""
+#     if owner
+#       output << icon_tag('star') + '幹事'
+#     else
+#       output << icon_tag('user') + '参加者'
+#     end
+#     output
+#   end
 
   # 開催日選択のセレクトボックスに使用する配列を生成する
   def get_date_select_values event

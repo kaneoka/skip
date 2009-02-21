@@ -1,7 +1,5 @@
 <div id="contents_container">
 
-  <div id="event_panel">
-
   <div id="contents_left">
 
     <div class="box_space">
@@ -9,7 +7,7 @@
       <div class="box_space_body">
         <ul>
 	  <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
-          <li><%= menu_item -%></li>
+          <li><%= menu_item %></li>
           <% end %>
         </ul>
       </div>
@@ -25,30 +23,30 @@
     </div>
     
 <div class="search_cond_space">
-  <% form_tag({:action => "event" }, :method => 'get') do -%>
-  <%= hidden_field_tag("menu","event_users") -%>
-  <%= hidden_field_tag("event_id", @event.id) -%>
+  <% form_tag({:action => "event" }, :method => 'get') do %>
+  <%= hidden_field_tag("menu","event_users") %>
+  <%= hidden_field_tag("event_id", @event.id) %>
 <table class="search_cond_box">
   <tr>
     <th>検索条件</th>
     <td colspan="3">
-      <%= radio_button_tag('include_absentee',"attendee"  ,params[:include_absentee]=="attendee") -%> 出席者のみ
-      <%= radio_button_tag('include_absentee',"include_absentee"  ,params[:include_absentee]=="include_absentee") -%>　欠席者・未回答者含む
-      <%= radio_button_tag('include_absentee',"participation"  ,params[:include_absentee]=="participation") -%>　全参加者
+      <%= radio_button_tag('include_absentee',"attendee"  ,params[:include_absentee]=="attendee") %> 出席者のみ
+      <%= radio_button_tag('include_absentee',"include_absentee"  ,params[:include_absentee]=="include_absentee") %>　欠席者・未回答者含む
+      <%= radio_button_tag('include_absentee',"participation"  ,params[:include_absentee]=="participation") %>　全参加者
     </td>
   </tr>
   <tr id="date_select" style="display:none;">
     <th>開催日</th>
     <td colspan="3">
-      <%= selected_tag("date", params[:date], get_date_select_values(@event)) -%>
+      <%= selected_tag("date", params[:date], get_date_select_values(@event)) %>
     </td>
   </tr>
   <tr>
     <th>氏名</th>
-    <td><%= text_field_tag "user_name", params[:user_name] -%></td>
+    <td><%= text_field_tag "user_name", params[:user_name] %></td>
   </tr>
 </table>
-<div class="submit"><%= submit_tag '検索' -%></div>
+<div class="submit"><%= submit_tag '検索' %></div>
 <% end %>
 </div>
 
@@ -56,15 +54,15 @@
   
 <div class="desc" style="margin-bottom: 10px;">この画面では、管理者の権限設定をすることが可能です。</div>
 
-  <% if @pages and @pages.item_count > 0 -%>
+  <% if @pages and @pages.item_count > 0 %>
   
-  <div class="navi"><%= page_link @pages -%></div>
+  <div class="navi"><%= page_link @pages %></div>
   <table border="1" class="normal" style="overflow:hidden ; margin: 5px 10px; overflow:hidden;">
     <th width="40px"></th><th width="70px">氏名</th>
     <% @event.event_dates.each do |date| %>
     <% color = (fixed_date?(@event, date) ? 'red' : 'black') %>
     <th>
-      <div style="font-size:11px;color:<%= color -%>"><%= date.to_s  %></div>
+      <div style="font-size:11px;color:<%= color %>"><%=h date.to_s  %></div>
       <div style="font-weight:normal;margin-top:3px"><%= generate_fixed_date_menu @event, date, @owner %></div>
     </th>
     <% end %>
@@ -73,45 +71,43 @@
 <% @users.each_with_index do |user, index| %>
 <% even_or_odd = 1 - even_or_odd %>
  <tr>
-   <td class="line_<%= even_or_odd -%>">
-     <% if session[:user_id] == user.id -%>
-       <% if @event.owner?(user.id) -%>
+   <td class="line_<%= even_or_odd %>">
+     <% if session[:user_id] == user.id %>
+       <% if @event.owner?(user.id) %>
          管理者
-       <% else -%>
+       <% else %>
          参加者
        <% end %>
      <% else %>
-       <% if @event.owner?(session[:user_id]) -%>
+       <% if @event.owner?(session[:user_id]) %>
          <%= check_box_tag("manager_#{index}", "true", @event.owner?(user.id),
-           {:onclick => "document.location.href='#{url_for(:action => :event_assign_user, :event => @event, :owner => "#{@event.owner?(user.id)}", :user_id => user.id)}'"}) -%>
+           {:onclick => "document.location.href='#{url_for(:action => :event_assign_user, :event_id => @event.id, :owner => "#{@event.owner?(user.id)}", :user_id => user.id) }'"}) %>
        <% else %>    
          <%= @event.owner?(user.id) ? "管理者" : "参加者" %>    
-       <% end -%>
+       <% end %>
      <% end %>
    </td>
-   <td class="line_<%= even_or_odd -%>"><%= user_link_to user %></td>
+   <td class="line_<%= even_or_odd %>"><%= user_link_to user %></td>
 
-
-
-        <% @event.event_dates.each do |date| -%>
-        <% span_id = "attendee_state_[#{@event.id}][#{date.id}][#{user.id}]" -%>
-        <% editable = @owner || user.id == session[:user_id] -%>
+        <% @event.event_dates.each do |date| %>
+        <% span_id = "attendee_state_[#{@event.id}][#{date.id}][#{user.id}]" %>
+        <% editable = @owner || user.id == session[:user_id] %>
         <td>
-          <span id="<%= span_id -%>"><%= show_attendees_state(date, @attendees_hash[date.id][user.id]) -%></span>
-            <% if editable -%>
+          <span id="<%= span_id %>"><%= show_attendees_state(date, @attendees_hash[date.id][user.id]) %></span>
+            <% if editable %>
               <%= generate_attendee_menu({:event => @event,
                                           :date => date,
                                           :attendee => @attendees_hash[date.id][user.id],
                                           :user_id => user.id,
-                                          :owner => @owner }) -%>
-            <% end -%>
-	    <%= render :partial => "editable_comment", :locals => {:date => date, :participation => user.group_participations.first, :editable => editable } -%>
+                                          :owner => @owner }) %>
+            <% end %>
+	    <%= render :partial => "editable_comment", :locals => {:date => date, :participation => user.group_participations.first, :editable => editable } %>
           </td>
         <% end %>
 </tr>
 <% end %>
 </table>
-<div class="navi"><%= page_link @pages -%></div>
+<div class="navi"><%= page_link @pages %></div>
 <% end %>
 </div>
 
@@ -119,7 +115,7 @@
 
 <div id="contents_bottom">
 </div><!-- contents_bottom -->
-</div><!-- event_panel -->
+
 </div><!-- contents_container -->
 
 <%= skip_jquery_include_tag "jquery.inplace" %>
@@ -135,7 +131,7 @@
         $j('#date_select').hide();
     });
 
-    var includeAbsenteeIsParticipation = <%= params[:include_absentee] == "participation" -%>;
+    var includeAbsenteeIsParticipation = <%= params[:include_absentee] == "participation" %>;
     if (!includeAbsenteeIsParticipation) {
         $j('#date_select').show();
     }
@@ -144,7 +140,7 @@
     addAttendeeLinkClick('<%= url_for :action => :attend %>', true);
     addAbsenteeLinkClick('<%= url_for :action => :absence %>', true);
 
-    var post_comment_url = "<%= url_for(:action => :ado_update_attendee_comment) -%>";
+    var post_comment_url = "<%= url_for(:action => :ado_update_attendee_comment) %>";
     $j('.editable_comment').editInPlace({
         url: post_comment_url,
         params: 'authenticity_token='+$j('#authenticity_token').val(),

@@ -1,7 +1,5 @@
 <div id="contents_container">
 
-  <div id="event_panel">
-
   <div id="contents_left">
 
     <div class="box_space">
@@ -9,7 +7,7 @@
       <div class="box_space_body">
         <ul>
 	  <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
-          <li><%= menu_item -%></li>
+          <li><%= menu_item %></li>
           <% end %>
         </ul>
       </div>
@@ -17,7 +15,7 @@
     </div><!-- box_space -->
 
     <div class="box_space">
-      <div class="box_space_title"><%= icon_tag 'find' -%>検索</div>
+      <div class="box_space_title"><%= icon_tag 'find' %>検索</div>
       <div class="box_space_body">
 	<% form_tag({:action => "event"}, {:method => :get}) do %>
 	<%= text_field_tag('keyword', params[:keyword], :size=>'10') %>
@@ -31,9 +29,9 @@
 
   <div id="contents_right">
   
-  <% if @pages and @pages.item_count > 0 -%>
+  <% if @pages and @pages.item_count > 0 %>
 
-    <div class="navi"><%= page_link @pages -%></div>
+    <div class="navi"><%= page_link @pages %></div>
 
     <table class="event_list_box normal">
       <h2>開催日確定のイベント</h2>
@@ -56,7 +54,7 @@
       <tr>
         <th>出席人数</th>
 	<td><% if event.date_fixed? %>
-	  <%= event.holding_date.event_attendees.select{|at| at.state == "attend" }.size -%>人
+	  <%= event.holding_date.event_attendees.select{|at| at.state == "attend" }.size %>人
 	  <% end %>
 	</td>
       </tr>
@@ -78,16 +76,16 @@
       </tr>
       <tr>
         <th >場所</th>
-        <td><div class="hiki_style"><%= event.place %></td>
+        <td><div class="hiki_style"><%=h event.place %></td>
       </tr>
       <tr>
         <th>幹事</th>
-        <td><%= event.event_admin_users %></td>
+        <td><%=h event.event_admin_users %></td>
       </tr>
       <tr>
         <th>出席人数</th>
 	<td><% if event.date_fixed? %>
-	  <%= event.holding_date.event_attendees.select{|at| at.state == "attend" }.size -%>人
+	  <%=h event.holding_date.event_attendees.select{|at| at.state == "attend" }.size %>人
 	  <% end %>
 	</td>
       </tr>
@@ -95,13 +93,12 @@
       <% end %>
     </table>
 
-    <div class="navi"><%= page_link @pages -%></div>
+    <div class="navi"><%= page_link @pages %></div>
 
     <% end %>
 
 <div id="contents_bottom">
 </div><!-- contents_bottom -->
   </div><!-- contents_right -->
-  </div>
 </div><!-- contents_container -->
 

@@ -246,8 +246,7 @@ $j(function(){
                 url: url,
                 data: params,
                 complete: function(request) {
-                    $j('#' + updateElemId).html(request.responseText);
-                    //                    fnLoadPngs();
+		    $j('#' + updateElemId).html(request.responseText);
                 }
             });
     };

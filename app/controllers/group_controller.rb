@@ -417,7 +417,7 @@ class GroupController < ApplicationController
                                 )
 
       @owner = false
-      @owner = true if @event.event_owners.find_by_user_id(session[:user_id])
+      @owner = true if @event.event_owners.find_by_user_id(current_user.id)
 
     when "event_show"
       if @event = Event.find(params[:event_id] )
@@ -441,9 +441,9 @@ class GroupController < ApplicationController
                                :include=>[:group_participations])
       @users -= @admin_users
 
-      @participation = group.group_participations.find_by_user_id(session[:user_id])
+      @participation = group.group_participations.find_by_user_id(current_user.id)
       @owner = false
-      @owner = true if @event.event_owners.find_by_user_id(session[:user_id])
+      @owner = true if @event.event_owners.find_by_user_id(current_user.id)
 
     when "event_users"
       @menu = "event_users"
@@ -492,9 +492,8 @@ class GroupController < ApplicationController
                                 :include => [:user_uids, :group_participations, :user_profile,:event_owners, :event_attendees])
 
       @owner = false
-      @owner = true if @event.event_owners.find_by_user_id(session[:user_id])
+      @owner = true if @event.event_owners.find_by_user_id(current_user.id)
     end
-    
     render :partial => @menu, :layout => true
   end
   
@@ -523,13 +522,13 @@ class GroupController < ApplicationController
     @event.publication_symbol = params[:publication_type] == "public" ? "sid:allusers" : @group.symbol
 
     # 管理者(自分)
-    @event.event_owners.build(:user_id => session[:user_id])
+    @event.event_owners.build(:user_id => current_user.id)
 
     # @eventをsaveすることで、候補日、公開範囲、ユーザ、制約全部一緒にDBに入る
     if @event.save
       if @event.event_dates.size == 1 # 候補日がひとつなら確定日に指定する
 #        @event.event_dates.first.fixed_date = true
-        EventAttendee.create(:user_id => session[:user_id],
+        EventAttendee.create(:user_id => current_user.id,
                              :event_date_id => @event.event_dates.first.id,
                              :state => "attend",
                              :comment => "",
@@ -555,11 +554,10 @@ class GroupController < ApplicationController
   end
 
   def event_destroy
-    event = Event.find_by_id(params[:event_id] )
-    if event.destroy
+    event = Event.find(params[:event_id] )
+    if event
+      event.destroy
       flash[:notice] = 'イベントは削除されました。'
-      redirect_to :action => 'event'
-      return
     else
       flash[:notice] = 'イベントの削除に失敗しました。'
     end
@@ -569,7 +567,7 @@ class GroupController < ApplicationController
   def event_close
     event = Event.find(params[:event_id])
     event.update_attributes(:acceptable => false)
-    flash[:notice] = params[:message] || "締め切りました"
+    flash[:notice] = "締め切りました"
     redirect_to :action => "event", :menu => "event_show", :event_id => event.id
   end
 
@@ -595,65 +593,56 @@ class GroupController < ApplicationController
   # success = 「管理者一覧画面」を表示
   # failure = もとの画面を表示
   def event_assign_user
-    event = Event.find_by_id(params[:event])
-    owner = false
-    owner = true if params[:owner] == "true"
-    if owner
+    if event = Event.find_by_id(params[:event_id])
+    if params[:owner]
       EventOwner.destroy_all(["event_id = ? and user_id = ?",event.id,params[:user_id]])
     else
       EventOwner.create(:event_id => event.id, :user_id => params[:user_id])
     end
     flash[:notice] = "管理者情報を変更しました。"
-    redirect_to :action => 'event', :menu => 'event_edit', :event_id => event.id
+    end
+    redirect_to :action => 'event', :menu => 'event_users', :event_id => event.id
   end
  
-  # 出席欠席状況の変更
-  def change_attend_state(user_id, event_date_id, state, event_id)
-    @event = Event.find(event_id)
-    if event_attendee = EventAttendee.find_by_user_id_and_event_date_id(user_id, event_date_id)
-      event_attendee.update_attributes(:state => state) unless event_attendee.state == state
-    else
-        group_id = Group.find_by_gid(@event.gid).id
-        participation = GroupParticipation.find_by_user_id_and_group_id(user_id, group_id)
-        event_attendee = EventAttendee.create(:user_id => user_id, :group_participation_id => participation.id, :event_date_id => event_date_id, :state => state, :comment => "")
-    end
-    return event_attendee
-  end
-
   def fix_date
     event = Event.find(params[:event_id])
-    event_dates = EventDate.find_all_by_event_id(event.id)
 
     fixed_event_date = EventDate.find(params[:event_date_id]);
 
-    event_dates.each do |event_date|
-      if event_date.id == params[:event_date_id].to_i
-        event_date.update_attributes(:fixed_date => true )
-      elsif event_date.fixed_date == true
-        event_date.update_attributes(:fixed_date => false )
+    if event_dates = EventDate.find_all_by_event_id(event.id)
+    
+      event_dates.each do |event_date|
+        if event_date.id == params[:event_date_id].to_i
+          event_date.update_attributes(:fixed_date => true )
+        elsif event_date.fixed_date == true
+          event_date.update_attributes(:fixed_date => false )
+        end
       end
+
+      # 開催日確定連絡(参加者あて)
+      entry_params = { }
+      entry_params[:title] ="【#{event.name}】開催日を確定しました"
+      entry_params[:message] = "以下の日程でイベントを開催します。みなさんの参加をお待ちしています。"
+      entry_params[:message] << BoardEntry::LINE_FEED
+      entry_params[:message] << fixed_event_date.start_time.strftime("%Y/%m/%d %H:%M") + "～"
+      entry_params[:message] << fixed_event_date.end_time.strftime("%Y/%m/%d %H:%M")
+      entry_params[:message] << BoardEntry::LINE_FEED + "(出席連絡をされていない方はお早めに。)"
+      entry_params[:tags] = "#{Tag::NOTICE_TAG},開催日確定"
+      entry_params[:user_symbol] = session[:user_symbol]
+      entry_params[:user_id] = session[:user_id]
+      entry_params[:entry_type] = BoardEntry::GROUP_BBS
+      entry_params[:owner_symbol] = @group.symbol
+      entry_params[:publication_type] = 'private'
+      entry_params[:publication_symbols] = [session[:user_symbol]]
+      entry_params[:publication_symbols] << @group.symbol
+      
+      entry = BoardEntry.create_entry(entry_params)
+
+      flash[:notice] = "確定しました"
+    else
+      flash[:notice] = "確定に失敗しました"
     end
 
-    # 開催日確定連絡(参加者あて)
-    entry_params = { }
-    entry_params[:title] ="【#{event.name}】開催日を確定しました"
-    entry_params[:message] = "以下の日程でイベントを開催します。みなさんの参加をお待ちしています。"
-    entry_params[:message] << BoardEntry::LINE_FEED
-    entry_params[:message] << fixed_event_date.start_time.strftime("%Y/%m/%d %H:%M") + "～"
-    entry_params[:message] << fixed_event_date.end_time.strftime("%Y/%m/%d %H:%M")
-    entry_params[:message] << BoardEntry::LINE_FEED + "(出席連絡をされていない方はお早めに。)"
-    entry_params[:tags] = "#{Tag::NOTICE_TAG},開催日確定"
-    entry_params[:user_symbol] = session[:user_symbol]
-    entry_params[:user_id] = session[:user_id]
-    entry_params[:entry_type] = BoardEntry::GROUP_BBS
-    entry_params[:owner_symbol] = @group.symbol
-    entry_params[:publication_type] = 'private'
-    entry_params[:publication_symbols] = [session[:user_symbol]]
-    entry_params[:publication_symbols] << @group.symbol
-
-    entry = BoardEntry.create_entry(entry_params)
-
-    flash[:notice] = "確定しました"
     redirect_to :action => "event", :menu => "event_show", :event_id => event.id
   end
 
@@ -676,15 +665,6 @@ class GroupController < ApplicationController
   def absence
     event_attendee = change_attend_state(params[:user_id], params[:event_date_id], "absence", params[:event_id])
     render_attendee(event_attendee, params[:only_icon])
-  end
-
-  # 出席、欠席の後にrenderする
-  def render_attendee(event_attendee, only_icon)
-    if only_icon
-      render :partial => 'attendee_icon', :locals => {:date => event_attendee.event_date, :attendee => event_attendee}
-    else
-      render :partial => 'attendee', :locals => {:event => @event, :date => event_attendee.event_date, :attendee => event_attendee}
-    end
   end
 
   def ado_update_attendee_comment
@@ -770,6 +750,7 @@ private
     @tab_menu_source << ['管理', 'manage'] if participating? and @participation.owned?
     @tab_menu_source << ['イベント','event']
     @tab_menu_option = { :gid => @group.gid }
+#    @tab_menu_option << { :menu => 'event_list' } 
   end
 
   def load_group_and_participation
@@ -827,11 +808,33 @@ private
 
 ###イベント関連
 
+  # 出席欠席状況の変更
+  def change_attend_state(user_id, event_date_id, state, event_id)
+    @event = Event.find(event_id)
+    if event_attendee = EventAttendee.find_by_user_id_and_event_date_id(user_id, event_date_id)
+      event_attendee.update_attributes(:state => state) unless event_attendee.state == state
+    else
+      group = Group.find_by_gid(@event.gid) if @event.gid
+      participation = GroupParticipation.find_by_user_id_and_group_id(user_id, group.id)
+      event_attendee = EventAttendee.create(:user_id => user_id, :group_participation_id => participation.id, :event_date_id => event_date_id, :state => state, :comment => "")
+    end
+    return event_attendee
+  end
+
+  # 出席、欠席の後にrenderする
+  def render_attendee(event_attendee, only_icon)
+    if only_icon
+      render :partial => 'attendee_icon', :locals => {:date => event_attendee.event_date, :attendee => event_attendee}
+    else
+      render :partial => 'attendee', :locals => {:event => @event, :date => event_attendee.event_date, :attendee => event_attendee}
+    end
+  end
+  
   # 独自のバリデーション（成功ならtrue）
   def validate_params params, event
     # 公開範囲のタイプ
     unless %w(public private).include? params[:publication_type]
-      event.errors.add nil, "公開範囲の指定が不正です"
+      event.errors.add_on_base "公開範囲の指定が不正です"
     end
 
     # 日付のフォーマットチェック
