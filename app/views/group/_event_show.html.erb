@@ -1,13 +1,5 @@
 <div id="contents_container">
 
-  <div id="mainmenu">
-    <ul class="submenu">
-      <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
-      <li class="menu"><%= menu_item -%></li>
-      <% end %>
-    </ul>
-  </div>
-
   <div id="event_panel">
 
   <div id="contents_left">
@@ -16,85 +8,59 @@
       <div class="box_space_title">メニュー</div>
       <div class="box_space_body">
         <ul>
-          <% get_event_menu_items(@menu,@event.id).each do |menu_item| %>
+	  <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
           <li><%= menu_item -%></li>
           <% end %>
         </ul>
       </div>
       <div class="box_space_bottom"></div>
-
-      <% if @event.owner?(session[:user_id]) %>
-      <div class="box_space_title">幹事メニュー</div>
-      <div class="box_space_body">
-        <ul>
-          <% get_event_manage_menu_items(@menu,@event.id).each do |menu_item| %>
-          <li><%= menu_item -%></li>
-          <% end %>
-        </ul>
-      </div>
-      <div class="box_space_bottom"></div>
-      <% end %>
-
     </div><!-- box_space -->
 
-    <div class="box_space">
-      <div class="box_space_title"><%= icon_tag('information') -%><span>状態</span></div>
-      <div class="box_space_body">
-        <% state = generate_event_visitor_state(@event, @participation, @owner, session[:user_id]) -%>
-        <%= state -%>
-      </div>
+  </div><!-- contents_left -->
+
+  <div id="contents_right">
+
+    <div class="input_line">
+      <h1 id="title" hight="10px"><%= event_link_to @event -%>
+      <span style="font-size: 12px; padding-left: 20px;">
+      <% if @event.owner?(session[:user_id]) %>
+      <% get_event_manage_menu_items(@menu,@event.id).each do |menu_item| %>
+      <%= menu_item -%>
+      <% end %>
+      <% end %>
+      </span>
+      </h1>
     </div>
 
-  </div><!-- contents_left -->
-  
-  <div id="contents_right">
-    
-    <div class="input_line">
-      <h1 id="title" hight="10px"><%=h @event.name %></h1>
-    </div>
-    
-    <% informations = generate_event_informations(@event, @participation, @owner) -%>
+    <div class="desc" style="margin-bottom: 10px;">
+      <% state = generate_event_visitor_state(@event, @participation, @owner, session[:user_id]) -%>
+      <%= state -%>
+      <% informations = generate_event_informations(@event, @participation, @owner) -%>
     <% unless informations.empty? -%>
-    <div class="event_info_space">
-      <div class="topix_title" style="text-align: left;"><%= icon_tag('asterisk_orange') -%><span>お知らせ</span></div>
-      <div class="event_info_space_lines">
         <% informations.each do |information| -%>
         <div class="event_info_space_lines_line"><%= information -%></div>
         <% end %>
-      </div>
-    </div><!-- event_info_space -->
     <% end %>
-    
-    <div class="input_line">
-      <div class="input_label">幹事</div>
-      <% @admin_users.each do |user| %>
-      <%= user_link_to user %>
-      <% end %>
-    </div>
-    
-    <div class="input_line">
-      <div class="input_label">開催日時</div>
+  </div>
+
+  <div class="input_line" width="20%">
+      <div class="input_label" >開催日時</div>
       <%=h @event.date_fixed? ? @event.holdingDatetime : "開催日が確定していません" %>
     </div>
-    
-    <div class="input_line">
-      <div class="input_label">説明</div>
-
-      <div id="description_body">
-	<%= render_richtext(@event.description, @event.symbol) -%>
-      </div>
-    </div>
-    
-    <div class="input_line">
+    <div class="input_line">  
+      
       <div class="input_label">場所</div>
       <div class="hiki_style"><%= hiki_parse(@event.place, @event.symbol) %></div>
-    </div>
-  
+  </div>
+
   <%= hidden_field_tag("authenticity_token", form_authenticity_token) %>
   <div class="event_info_space">
-    <div class="topix_title" style="text-align: left;"><%= icon_tag('asterisk_orange') -%><span>開催日/候補日の調整</span></div>
+    <h2 class="topix_title"><%= icon_tag('asterisk_orange') %>開催日/候補日の調整</h2>
+      <div id="admin_menu" style="margin-top: 5px; padding: 5px; font-weight: bold;">
+	<%= link_to("[みんなの出席状況を見る]", :action => :event, :menu => :event_users, :event_id => @event.id ) -%>
+      </div>
     <div class="event_info_space_desc">
-      <table style="width: 100%;" id="event_dates">
+      <table style="width: 100%; border: 1px sold silver" id="event_dates">
         <%= render :partial => 'date', :collection => @event.event_dates, :locals => { :event => @event,
         :user_id => session[:user_id],
         :owned => @owner} -%>
@@ -120,12 +86,28 @@
         <%= generate_date_menu(@event, @participation, @owner) -%>
       </div>
       <% end %>
-    </div>
+
   </div><!-- event_info_space -->
-  
+
+  <div class="group_info_space">
+    <h2 class="topix_title"><%= icon_tag('asterisk_orange') %>このイベントについて</h2>
+    <div class="group_info_space_desc">
+    </div>
+      <div class="group_info_space_desc_body"><%= render_richtext(@event.description, @event.symbol) -%></div>
+
+  </div><!-- group_info_space -->
+        
+    <div class="input_line">
+      <div class="input_label">幹事</div>
+      <% @admin_users.each do |user| %>
+      <%= user_link_to user %>
+      <% end %>
+    </div>
+      
   </div><!--summary_right-->
   
   </div><!-- contents_right -->
+  
 </div><!-- event_panel -->
 </div><!-- summary_container -->
 

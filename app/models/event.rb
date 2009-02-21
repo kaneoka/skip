@@ -41,6 +41,7 @@ class Event < ActiveRecord::Base
     self.event_dates.each do |event_date|
       return event_date if event_date.fixed_date == true
     end
+    return false
   end
 
   def participation? user_id
@@ -87,7 +88,7 @@ class Event < ActiveRecord::Base
     self.event_owners.each do |users|
       admin_users << users.user.name 
     end
-    admin_users.join(" ")
+    admin_users.join(" , ")
   end
 
   #確定日があるかどうか

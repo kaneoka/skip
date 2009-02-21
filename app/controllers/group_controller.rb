@@ -378,9 +378,7 @@ class GroupController < ApplicationController
       conditions =["gid = ? and publication_symbol in (?)",@group.gid,condition_params]
 
       unless params[:include_past_event] 
-#        conditions[0] << "and fixed_date = ? and end_time > ? "
         conditions[0] << "and end_time > ? "
-#        conditions << true
         conditions << Time.now
       end
 
@@ -398,9 +396,25 @@ class GroupController < ApplicationController
         flash.now[:notice] = 'イベントはありませんでした。'
       end
     when "event_edit"
+
       if @event = Event.find(params[:event_id])
         params[:publication_type] = @event.publication_symbol == 'sid:allusers' ? 'public' :'private'
       end
+
+      per_page = 30
+      group = Group.find_by_gid(@event.gid)
+      conditions =["group_participations.group_id = ? ",group.id]
+
+      @admin_users = User.find(:all,
+                               :order=>"group_participations.updated_on DESC",
+                               :conditions=>["group_participations.group_id = ? and event_owners.event_id = ? ", group.id, @event.id],
+                               :include=>[:group_participations,:event_owners])
+
+      @pages, @users = paginate(:user,
+                                :per_page => per_page,
+                                :conditions => conditions,
+                                :include => "group_participations"
+                                )
 
       @owner = false
       @owner = true if @event.event_owners.find_by_user_id(session[:user_id])
@@ -514,7 +528,7 @@ class GroupController < ApplicationController
     # @eventをsaveすることで、候補日、公開範囲、ユーザ、制約全部一緒にDBに入る
     if @event.save
       if @event.event_dates.size == 1 # 候補日がひとつなら確定日に指定する
-        @event.event_dates.first.fixed_date = true
+#        @event.event_dates.first.fixed_date = true
         EventAttendee.create(:user_id => session[:user_id],
                              :event_date_id => @event.event_dates.first.id,
                              :state => "attend",
@@ -590,7 +604,7 @@ class GroupController < ApplicationController
       EventOwner.create(:event_id => event.id, :user_id => params[:user_id])
     end
     flash[:notice] = "管理者情報を変更しました。"
-    redirect_to :action => 'event', :menu => 'event_users', :event_id => event.id
+    redirect_to :action => 'event', :menu => 'event_edit', :event_id => event.id
   end
  
   # 出席欠席状況の変更

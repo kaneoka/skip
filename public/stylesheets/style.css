@@ -829,8 +829,9 @@ table.event_list_box {
 table.event_list_box th {
   text-align: left;
   background-color: #f0f0ff;
-  padding-left: 5px;
+  padding: 5px;
   border: 1px solid silver;
+  width: 10%; 
 }
 table.event_list_box td {
   padding: 0px 5px;

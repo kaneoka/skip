@@ -1,20 +1,36 @@
 <div id="contents_container">
 
-    <div id="mainmenu">
-      <ul class="submenu">
-	<% get_events_menu_items(@menu,@participation).each do |menu_item| %>
-	<li class="menu"><%= menu_item -%></li>
-	<% end %>
-      </ul>
-    </div>
   <div id="event_panel">
 
-    <% form_tag({:action => "event"}, {:method => :get}) do %>
-    <%= text_field_tag('keyword', params[:keyword], :size=>'10') %>
-    <%= submit_tag "検索" %><br/>
-    <%= check_box_tag("include_past_event","true",params[:include_past_event]) %>過去のイベントを含めて表示
-    <% end %>
+  <div id="contents_left">
 
+    <div class="box_space">
+      <div class="box_space_title">メニュー</div>
+      <div class="box_space_body">
+        <ul>
+	  <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
+          <li><%= menu_item -%></li>
+          <% end %>
+        </ul>
+      </div>
+      <div class="box_space_bottom"></div>
+    </div><!-- box_space -->
+
+    <div class="box_space">
+      <div class="box_space_title"><%= icon_tag 'find' -%>検索</div>
+      <div class="box_space_body">
+	<% form_tag({:action => "event"}, {:method => :get}) do %>
+	<%= text_field_tag('keyword', params[:keyword], :size=>'10') %>
+	<%= submit_tag "検索" %><br/>
+	<%= check_box_tag("include_past_event","true",params[:include_past_event]) %>過去のイベントを含めて表示
+	<% end %>
+      </div>
+    </div><!-- box_space -->
+
+  </div><!-- contents_left -->
+
+  <div id="contents_right">
+  
   <% if @pages and @pages.item_count > 0 -%>
 
     <div class="navi"><%= page_link @pages -%></div>
@@ -24,15 +40,10 @@
       <% for event in @events %>
       <% if event.date_fixed? %>
       <tr>
-	<% if event.past_event? %>
-        <td width="30%" rowspan="5" bgcolor="black"><%= event_link_to event %></td>
-	<% else %>
-        <td width="30%" rowspan="5" bgcolor="lightyellow"><%= event_link_to event %></td>
-	<% end %>
-      </tr>
+        <td rowspan="5" bgcolor="lightyellow"><%= event_link_to event %></td>
       <tr>
-        <th width="10%">開催日時</th>
-        <td width="75%"><%=h event.date_fixed? ? event.holdingDatetime : "開催日が確定していません" %></td>
+        <th>開催日時</th>
+        <td><%=h event.date_fixed? ? event.holdingDatetime : "開催日が確定していません" %></td>
       </tr>
       <tr>
         <th >場所</th>
@@ -49,6 +60,7 @@
 	  <% end %>
 	</td>
       </tr>
+      </tr>
       <% end %>
       <% end %>
     </table>
@@ -58,11 +70,7 @@
       <% for event in @events %>
       <% unless event.date_fixed? %>
       <tr>
-	<% if event.past_event? %>
-        <td width="30%" rowspan="5" bgcolor="black"><%= event_link_to event %></td>
-	<% else %>
         <td width="30%" rowspan="5" bgcolor="pink"><%= event_link_to event %></td>
-	<% end %>
       </tr>
       <tr>
         <th width="10%">開催日時</th>
@@ -93,6 +101,7 @@
 
 <div id="contents_bottom">
 </div><!-- contents_bottom -->
-
-</div><!-- contents_container -->
+  </div><!-- contents_right -->
   </div>
+</div><!-- contents_container -->
+

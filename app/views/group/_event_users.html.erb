@@ -1,13 +1,5 @@
 <div id="contents_container">
 
-    <div id="mainmenu">
-      <ul class="submenu">
-	<% get_events_menu_items(@menu,@participation).each do |menu_item| %>
-	<li class="menu"><%= menu_item -%></li>
-	<% end %>
-      </ul>
-    </div>
-
   <div id="event_panel">
 
   <div id="contents_left">
@@ -16,40 +8,20 @@
       <div class="box_space_title">メニュー</div>
       <div class="box_space_body">
         <ul>
-          <% get_event_menu_items(@menu,@event.id).each do |menu_item| %>
+	  <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
           <li><%= menu_item -%></li>
           <% end %>
         </ul>
       </div>
       <div class="box_space_bottom"></div>
-
-      <% if @event.owner?(session[:user_id]) %>
-      <div class="box_space_title">幹事メニュー</div>
-      <div class="box_space_body">
-        <ul>
-          <% get_event_manage_menu_items(@menu,@event.id).each do |menu_item| %>
-          <li><%= menu_item -%></li>
-          <% end %>
-        </ul>
-      </div>
-      <div class="box_space_bottom"></div>
-      <% end %>
     </div><!-- box_space -->
-
-    <div class="box_space">
-      <div class="box_space_title"><%= icon_tag('information') -%><span>状態</span></div>
-      <div class="box_space_body">
-        <% state = generate_event_visitor_state(@event, @participation, @owner, session[:user_id]) -%>
-	<%= state -%>
-      </div>
-    </div>
 
   </div><!-- contents_left -->
 
   <div id="contents_right">
 
     <div class="input_line">
-      <h1 id="title" hight="10px"><%=h @event.name %></h1>
+      <h1 id="title" hight="10px"><%= event_link_to @event %></h1>
     </div>
     
 <div class="search_cond_space">
@@ -81,9 +53,9 @@
 </div>
 
 <div class="search_result_space">
-
-<div class="desc" style="margin-bottom: 10px;">この画面では、管理者の権限設定をすることが可能です。</div>
   
+<div class="desc" style="margin-bottom: 10px;">この画面では、管理者の権限設定をすることが可能です。</div>
+
   <% if @pages and @pages.item_count > 0 -%>
   
   <div class="navi"><%= page_link @pages -%></div>
@@ -100,24 +72,26 @@
 <% even_or_odd = 0 %>
 <% @users.each_with_index do |user, index| %>
 <% even_or_odd = 1 - even_or_odd %>
-<tr>
-  <td class="line_<%= even_or_odd -%>">
-    <% if session[:user_id] == user.id -%>
-      <% if @event.owner?(user.id) -%>
-      管理者
-      <% else -%>
-      参加者
-      <% end %>
-    <% else %>
-      <% if @event.owner?(session[:user_id]) -%>
-      <%= check_box_tag("manager_#{index}", "true", @event.owner?(user.id),
-        {:onclick => "document.location.href='#{url_for(:action => :event_assign_user, :event => @event, :owner => "#{@event.owner?(user.id)}", :user_id => user.id)}'"}) -%>
-      <% else %>    
-      <%= @event.owner?(user.id) ? "管理者" : "参加者" %>    
-      <% end -%>
-      <% end %>
-  </td>
-  <td class="line_<%= even_or_odd -%>"><%= user_link_to user %></td>
+ <tr>
+   <td class="line_<%= even_or_odd -%>">
+     <% if session[:user_id] == user.id -%>
+       <% if @event.owner?(user.id) -%>
+         管理者
+       <% else -%>
+         参加者
+       <% end %>
+     <% else %>
+       <% if @event.owner?(session[:user_id]) -%>
+         <%= check_box_tag("manager_#{index}", "true", @event.owner?(user.id),
+           {:onclick => "document.location.href='#{url_for(:action => :event_assign_user, :event => @event, :owner => "#{@event.owner?(user.id)}", :user_id => user.id)}'"}) -%>
+       <% else %>    
+         <%= @event.owner?(user.id) ? "管理者" : "参加者" %>    
+       <% end -%>
+     <% end %>
+   </td>
+   <td class="line_<%= even_or_odd -%>"><%= user_link_to user %></td>
+
+
 
         <% @event.event_dates.each do |date| -%>
         <% span_id = "attendee_state_[#{@event.id}][#{date.id}][#{user.id}]" -%>

@@ -37,39 +37,78 @@ module GroupHelper
  ###イベントに関するhelper
 
   def generate_event_visitor_state event, participation, owner, user_id
-    state = "<div style='font-weight:bold;color:blue;background-color:#f0f0ff;margin-bottom:5px;'>"
-    if event.past_event?
-      return state << '過去のイベントです</div>', ""
+    state = "<div style='margin-top:5px;margin-bottom: 5px;'>"    
+
+    if participation == nil and event.acceptable
+      state << icon_tag('key') + "このイベントは参加するには事前にグループへの参加が必須です。"
+      state << "</div><div style='margin-left:25px;'>"
+      url_param = {:controller => "group", :action => "new_participation"}
+      state << icon_tag('group_go') + link_to('【このグループへ参加申込みをする】', url_param, {:class => "nyroModal"})
+      state << "</div>"
+      return state
     end
 
-    if event.acceptable
-      state << (event.date_fixed? ? "開催日は確定済みです" : "開催日は未確定です")
+    if event.holding_date
+      unless ea = EventAttendee.find_by_event_date_id_and_user_id(event.holding_date.id, user_id)
+        state << icon_tag('lightbulb') + "開催日の出欠情報が入力されていません。入力してください。"
+      else
+        if ea.state == "pending"
+          state << icon_tag('lightbulb') + "開催日の出欠情報が入力されていません。入力してください。"
+        end
+      end
     else
-      state << "締め切られています"
+      event.event_dates.each do |event_date|
+        unless EventAttendee.find_by_event_date_id_and_user_id(event_date.id, user_id)
+          state << icon_tag('lightbulb') + "出欠情報が入力されていない候補日があります。"
+          break
+        end
+      end
     end
+
     state << "</div>"
+
     state << "<div style='margin-bottom:5px;'>"
-    state <<  generate_owner_menus(event) if event.participation?(user_id) && owner
-    state << "</div>"
-    if event.participation?(user_id)
-      state << (owner ? '幹事です！' : '参加中です！')
+
+    if owner
+      if event.acceptable
+        unless event.holding_date
+          state << icon_tag('lightbulb') + "開催日が確定していません。開催日を確定してください。"
+        else
+          state << icon_tag('lightbulb') + "出欠登録を締め切ることができます。"
+          state << "</div><div style='margin-left:25px;'>"
+          state << icon_tag('cut') + generate_owner_menus(event)
+        end
+      else
+          state << icon_tag('lightbulb') + "出欠登録を締め切りを解除することができます。"
+          state << "</div><div style='margin-left:25px;'>"
+          state << icon_tag('cut') + generate_owner_menus(event)
+      end
     end
+
+    state << "</div>"
 
     return state
   end
 
   def generate_event_informations event, participation, owner
     informations = []
-    
-    if event.past_event?
-      return informations << icon_tag('bullet_red') + 'このイベントは過去に開催されました'
-    end
-    if participation == nil and event.acceptable
-      informations << icon_tag('key') + "このイベントは参加するには事前にグループへの参加が必須です。"
 
-      url_param = {:controller => "group", :action => "new_participation"}
-      informations << icon_tag('group_go') + link_to('【このグループへ参加申込みをする】', url_param, {:class => "nyroModal"})
+    informations = "<div style='margin-top:5px;margin-bottom: 5px;'>"    
+
+    if event.past_event?
+      return informations << icon_tag('information') + 'このイベントは過去に開催されました'
     end
+    
+    if event.acceptable
+      if event.holding_date
+      end
+    else
+      informations << "</div><div style='margin-top:5px;margin-bottom: 5px;'>"    
+      informations << icon_tag('information') + "イベントの詳細が確定しました。開催日と開催場所を確認してください。"
+    end
+
+    informations << "</div>"
+
     informations
   end
 
@@ -80,10 +119,10 @@ module GroupHelper
     menu_items = []
     menus.each do |menu|
       if menu[:menu] == selected_menu
-        menu_items << "<b>#{menu[:name]}</b>"
+        menu_items << icon_tag('bullet_red') + "<b>#{menu[:name]}</b>"
       else
         link_to_params = { :action => "event", :menu => menu[:menu] }
-        menu_items << link_to(menu[:name], link_to_params, :confirm => menu[:confirm])
+        menu_items << icon_tag('bullet_blue') + link_to(menu[:name], link_to_params, :confirm => menu[:confirm])
       end
     end
     menu_items
@@ -106,15 +145,15 @@ module GroupHelper
   end
 
   def get_event_manage_menu_items selected_menu, event_id
-    menus = [{:name => "イベントの編集", :menu => "event_edit" } ]
+    menus = [{:name => "[イベントを編集する]", :menu => "event_edit" } ]
 
     menu_items = []
     menus.each do |menu|
       if menu[:menu] == selected_menu
-        menu_items << icon_tag('bullet_red') + "<b>#{menu[:name]}</b>"
+        menu_items << "<b>#{menu[:name]}</b>"
       else
         link_to_params = { :action => "event", :menu => menu[:menu], :event_id => event_id }
-        menu_items << icon_tag('bullet_blue') + link_to(menu[:name], link_to_params, :confirm => menu[:confirm])
+        menu_items << link_to(menu[:name], link_to_params, :confirm => menu[:confirm])
       end
     end
     menu_items
@@ -154,13 +193,13 @@ module GroupHelper
 
   def show_attendees_state date, attendee
     unless attendee
-      icon_tag('help')
+      ""
     else
       case attendee.state
         when "attend"
-        icon_tag('emoticon_happy')
+        icon_tag('emoticon_happy') + "出席"
         when "absence"
-        icon_tag('cross')       
+        icon_tag('cross') + "欠席"
       end
     end
   end
@@ -174,10 +213,10 @@ module GroupHelper
     menus = ""
     if event.acceptable # 締切前
       if event.date_fixed? # 確定後
-        menus << link_to("[イベントを締切る]", {:action => 'event_close', :event_id => event.id}, :confirm => "イベントを締め切ります。よろしいですか？")
+        menus << link_to("[出欠登録を締め切る]", {:action => 'event_close', :event_id => event.id}, :confirm => "イベントを締め切ります。よろしいですか？")
       end
     else
-      menus << link_to("[締切を解除する]", {:action => 'event_unclose', :event_id => event.id}, :confirm => "イベントの締め切りを解除しますが、よろしいですか？")
+      menus << link_to("[出欠登録の締め切りを解除する]", {:action => 'event_unclose', :event_id => event.id}, :confirm => "イベントの締め切りを解除しますが、よろしいですか？")
     end
     menus
   end

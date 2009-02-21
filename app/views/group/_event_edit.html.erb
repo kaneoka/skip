@@ -1,13 +1,5 @@
 <div id="contents_container">
 
-    <div id="mainmenu">
-      <ul class="submenu">
-	<% get_events_menu_items(@menu,@participation).each do |menu_item| %>
-	<li class="menu"><%= menu_item -%></li>
-	<% end %>
-      </ul>
-    </div>
-
   <div id="event_panel">
 
   <div id="contents_left">
@@ -16,34 +8,13 @@
       <div class="box_space_title">メニュー</div>
       <div class="box_space_body">
         <ul>
-          <% get_event_menu_items(@menu,@event.id).each do |menu_item| %>
+	  <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
           <li><%= menu_item -%></li>
           <% end %>
         </ul>
       </div>
       <div class="box_space_bottom"></div>
-
-      <% if @event.owner?(session[:user_id]) %>
-      <div class="box_space_title">幹事メニュー</div>
-      <div class="box_space_body">
-        <ul>
-          <% get_event_manage_menu_items(@menu,@event.id).each do |menu_item| %>
-          <li><%= menu_item -%></li>
-          <% end %>
-        </ul>
-      </div>
-      <div class="box_space_bottom"></div>
-      <% end %>
-
     </div><!-- box_space -->
-
-    <div class="box_space">
-      <div class="box_space_title"><%= icon_tag('information') -%><span>状態</span></div>
-      <div class="box_space_body">
-        <% state = generate_event_visitor_state(@event, @participation, @owner, session[:user_id]) -%>
-	<%= state -%>
-      </div>
-    </div>
 
   </div><!-- contents_left -->
 
@@ -52,10 +23,15 @@
   <% form_tag({:action => :event_update, :event_id => @event.id}) do -%>
   <%= template_error_messages_for 'event' %>
 
+    <div class="input_line">
+      <h1 id="title" hight="10px"><%= event_link_to @event %></h1>
+    </div>
+
   <div class="input_line">
     <div class="input_label">名称</div>
     <div class="input_value"><%= text_field 'event', 'name', :size =>60 %></div>
   </div>
+
   <div class="input_line">
     <div class="input_label">説明</div>
       <div  class="input_value" ><%= text_area :event, :description, :class => 'invisible' %></div>
@@ -70,9 +46,10 @@
     <div class="input_label" id="input_label_publication">公開範囲</div>
     <div class="input_value" id="input_value_publication">
       <%= radio_button_tag("publication_type", "public", params[:publication_type] == "public", :id=>"publication_type_public") -%>全体に公開
-      <%= radio_button_tag("publication_type", "private", params[:publication_type] == "private", :id=>"publication_type_private") -%>イベントの参加者のみ
+      <%= radio_button_tag("publication_type", "private", params[:publication_type] == "private", :id=>"publication_type_private") -%>グループの参加者のみ
     </div>
   </div>
+
   <p><%= submit_tag "更新" %></p>
 
   <% end %>
@@ -91,6 +68,14 @@
 <%= skip_javascript_include_tag "fckeditor/fckeditor" %>
 <script type="text/javascript">
   $j(function() {
+
+    $j('#append_date_link')
+    .click(function() {
+        $j('#append_date_menu').fadeOut('normal', function() {
+            $j('#append_date_space').fadeIn('normal');
+        });
+        return false;
+    });
 
      FCKeditor.BasePath = platform_url_root + "/javascripts/skip/fckeditor/";
      new FCKeditor('event_description', '98%', '350', 'Normal').ReplaceTextarea();
