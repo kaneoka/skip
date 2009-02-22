@@ -6,7 +6,7 @@
       <div class="box_space_title">メニュー</div>
       <div class="box_space_body">
         <ul>
-	  <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
+	  <% get_events_menu_items(@controller.action_name,@participation).each do |menu_item| %>
           <li><%= menu_item %></li>
           <% end %>
         </ul>

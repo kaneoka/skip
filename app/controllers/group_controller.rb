@@ -365,136 +365,133 @@ class GroupController < ApplicationController
     redirect_to :action => 'manage', :menu => 'manage_participations'
   end
 
+  def event_new
+    @event = Event.new
+
+    @event.event_dates << EventDate.new(:start_time => Time.now, :end_time => (Time.now + (60*60)))
+    params[:publication_type] = "public"
+  end
+  
   def event
-    @menu = params[:menu] || "event_list"
-    case @menu
-    when "event_new"
-      @event = Event.new
-
-      @event.event_dates << EventDate.new(:start_time => Time.now, :end_time => (Time.now + (60*60)))
-      params[:publication_type] = "public"
-    when "event_list"
-      condition_params = login_user_symbols + [Symbol::SYSTEM_ALL_USER]
-      conditions =["gid = ? and publication_symbol in (?)",@group.gid,condition_params]
-
-      unless params[:include_past_event] 
-        conditions[0] << "and end_time > ? "
-        conditions << Time.now
-      end
-
-      if params[:keyword]
-        conditions[0] << "and name like ?"
-        conditions << "%" + params[:keyword] + "%"
-      end
-
-      @pages, @events = paginate(:events,
-                                 :per_page => 10,
-                                 :conditions => conditions,
-                                 :order => ['event_dates.fixed_date desc , event_dates.end_time desc'],
-                                 :include => ['event_dates'])
-      unless @events && @events.size > 0
-        flash.now[:notice] = 'イベントはありませんでした。'
-      end
-    when "event_edit"
-
-      if @event = Event.find(params[:event_id])
-        params[:publication_type] = @event.publication_symbol == 'sid:allusers' ? 'public' :'private'
-      end
-
-      per_page = 30
-      group = Group.find_by_gid(@event.gid)
-      conditions =["group_participations.group_id = ? ",group.id]
-
-      @admin_users = User.find(:all,
-                               :order=>"group_participations.updated_on DESC",
-                               :conditions=>["group_participations.group_id = ? and event_owners.event_id = ? ", group.id, @event.id],
-                               :include=>[:group_participations,:event_owners])
-
-      @pages, @users = paginate(:user,
-                                :per_page => per_page,
-                                :conditions => conditions,
-                                :include => "group_participations"
-                                )
-
-      @owner = false
-      @owner = true if @event.event_owners.find_by_user_id(current_user.id)
-
-    when "event_show"
-      if @event = Event.find(params[:event_id] )
-        group = Group.find_by_gid(@event.gid)
-
-        flash[:warning] ||= nil
-      else
-        flash[:warning] = "イベントはありませんでした"
-        redirect_to :action => "event", :menu => 'event_list'
-        return false
-      end
-
-      @admin_users = User.find(:all,
-                               :order=>"group_participations.updated_on DESC",
-                               :conditions=>["group_participations.group_id = ? and event_owners.event_id = ? ", group.id, @event.id],
-                               :include=>[:group_participations,:event_owners])
-      @users       = User.find(:all,
-                               :limit=>30,
-                               :order=>"group_participations.updated_on DESC",
-                               :conditions=>["group_participations.group_id = ?",group.id],
-                               :include=>[:group_participations])
-      @users -= @admin_users
-
-      @participation = group.group_participations.find_by_user_id(current_user.id)
-      @owner = false
-      @owner = true if @event.event_owners.find_by_user_id(current_user.id)
-
-    when "event_users"
-      @menu = "event_users"
-      @sort_types = sort_types
-      params[:date] ||=  ""
-      params[:include_absentee] ||= "participation"
-      params[:sort_type] ||= "code"
-
-      order_by = params[:sort_type]=="code" ? "user_uids.uid" : "group_participations.id"
-
-      @event = Event.find(params[:event_id])
-      group = Group.find_by_gid(@event.gid)
-      per_page = 30
-
-      conditions =["group_participations.group_id = ? ",group.id]
-
-      if params[:user_name]
-        conditions[0] << "and users.name like (?)"
-        conditions << "%" + params[:user_name] + "%"
-      end
-
-      unless params[:include_absentee] == "participation"
-        #全参加者でないときは、出席情報、コメント情報を取得(必ず日付が指定されている)
-        event_date = @event.event_dates.find(params[:date])
-
-        if params[:include_absentee] == "attendee"
-          # 出席者のみ
-          conditions[0] << " and event_attendees.event_date_id = ?  and event_attendees.state = ? "
-          conditions << params[:date]
-          conditions << "attend"
-        end
-      end
-
-      event_date_ids = @event.event_dates.map{ |date| date.id }
-
-      @attendees_hash = { }
-      event_date_ids.each { |date_id| @attendees_hash[date_id] = { } }
-      EventAttendee.find(:all, :conditions => ["event_date_id in (?)", event_date_ids]).each do |attendee|
-        @attendees_hash[attendee.event_date_id][attendee.user_id] = attendee
-      end
-
-      @pages, @users = paginate(:user,
-                                :per_page => per_page,
-                                :conditions => conditions,
-                                :order_by => order_by,
-                                :include => [:user_uids, :group_participations, :user_profile,:event_owners, :event_attendees])
-
-      @owner = false
-      @owner = true if @event.event_owners.find_by_user_id(current_user.id)
+    condition_params = login_user_symbols + [Symbol::SYSTEM_ALL_USER]
+    conditions =["gid = ? and publication_symbol in (?)",@group.gid,condition_params]
+    
+    unless @inculde_past_event = params[:include_past_event] 
+      conditions[0] << "and end_time > ? "
+      conditions << Time.now
     end
-    render :partial => @menu, :layout => true
+    
+    if params[:keyword]
+      conditions[0] << "and name like ?"
+      conditions << "%" + params[:keyword] + "%"
+    end
+    
+    @pages, @events = paginate(:events,
+                               :per_page => 10,
+                               :conditions => conditions,
+#                               :order => ['event_dates.end_time desc'],
+                               :order => ['event_dates.fixed_date desc , event_dates.end_time desc'],
+                               :include => ['event_dates'])
+    unless @events && @events.size > 0
+      flash.now[:notice] = 'イベントはありませんでした。'
+    end
+  end
+
+  def event_edit
+    
+    if @event = Event.find(params[:event_id])
+      params[:publication_type] = @event.publication_symbol == 'sid:allusers' ? 'public' :'private'
+    end
+    
+    per_page = 30
+    group = Group.find_by_gid(@event.gid)
+    conditions =["group_participations.group_id = ? ",group.id]
+    
+    @admin_users = User.find(:all,
+                             :order=>"group_participations.updated_on DESC",
+                             :conditions=>["group_participations.group_id = ? and event_owners.event_id = ? ", group.id, @event.id],
+                             :include=>[:group_participations,:event_owners])
+    
+    @pages, @users = paginate(:user,
+                              :per_page => per_page,
+                              :conditions => conditions,
+                              :include => "group_participations"
+                              )
+    
+    @owner = false
+    @owner = true if @event.event_owners.find_by_user_id(current_user.id)
+  end
+
+  def event_show
+    if @event = Event.find(params[:event_id] )
+      group = Group.find_by_gid(@event.gid)
+
+      flash[:warning] ||= nil
+    else
+      flash[:warning] = "イベントはありませんでした"
+      redirect_to :action => "event"
+      return false
+    end
+    
+    @admin_users = User.find(:all,
+                             :order=>"group_participations.updated_on DESC",
+                             :conditions=>["group_participations.group_id = ? and event_owners.event_id = ? ", group.id, @event.id],
+                               :include=>[:group_participations,:event_owners])
+    @users       = User.find(:all,
+                             :limit=>30,
+                             :order=>"group_participations.updated_on DESC",
+                             :conditions=>["group_participations.group_id = ?",group.id],
+                             :include=>[:group_participations])
+    @users -= @admin_users
+    
+    @participation = group.group_participations.find_by_user_id(current_user.id)
+    @owner = false
+    @owner = true if @event.event_owners.find_by_user_id(current_user.id)
+
+  end
+
+  def event_users
+    params[:include_absentee] ||= "participation"
+    
+    @event = Event.find(params[:event_id])
+    group = Group.find_by_gid(@event.gid)
+    per_page = 30
+    
+    conditions =["group_participations.group_id = ? ",group.id]
+    
+    if params[:user_name]
+      conditions[0] << "and users.name like (?)"
+      conditions << "%" + params[:user_name] + "%"
+    end
+    
+    unless params[:include_absentee] == "participation"
+      #全参加者でないときは、出席情報、コメント情報を取得(必ず日付が指定されている)
+      event_date = @event.event_dates.find(params[:date])
+      
+      if params[:include_absentee] == "attendee"
+        # 出席者のみ
+        conditions[0] << " and event_attendees.event_date_id = ?  and event_attendees.state = ? "
+        conditions << params[:date]
+        conditions << "attend"
+      end
+    end
+    
+    event_date_ids = @event.event_dates.map{ |date| date.id }
+    
+    @attendees_hash = { }
+    event_date_ids.each { |date_id| @attendees_hash[date_id] = { } }
+    EventAttendee.find(:all, :conditions => ["event_date_id in (?)", event_date_ids]).each do |attendee|
+      @attendees_hash[attendee.event_date_id][attendee.user_id] = attendee
+    end
+    
+    @pages, @users = paginate(:user,
+                              :per_page => per_page,
+                              :conditions => conditions,
+                              :order_by => "group_participations.id",
+                              :include => [:user_uids, :group_participations, :user_profile,:event_owners, :event_attendees])
+    
+    @owner = false
+    @owner = true if @event.event_owners.find_by_user_id(current_user.id)
   end
   
   def event_create
@@ -513,8 +510,7 @@ class GroupController < ApplicationController
     end
 
     unless validate_params params, @event
-      @menu = "event_new"
-      render :partial => @menu, :layout => true
+      render :action => 'event_new'
       return
     end
 
@@ -527,7 +523,6 @@ class GroupController < ApplicationController
     # @eventをsaveすることで、候補日、公開範囲、ユーザ、制約全部一緒にDBに入る
     if @event.save
       if @event.event_dates.size == 1 # 候補日がひとつなら確定日に指定する
-#        @event.event_dates.first.fixed_date = true
         EventAttendee.create(:user_id => current_user.id,
                              :event_date_id => @event.event_dates.first.id,
                              :state => "attend",
@@ -535,21 +530,20 @@ class GroupController < ApplicationController
                              :group_participation_id => GroupParticipation.find_by_user_id_and_group_id(session[:user_id],@group.id).id)
       end
 
-      redirect_to :action => "event", :menu => 'event_show', :event_id => @event.id
+      redirect_to :action => 'event_show', :event_id => @event.id
       return
     else
-      @menu = "event_new"
-      render :partial => "event_new", :layout => true
+      render :action => 'event_new'
     end
   end
 
   def event_update
-    event = Event.find(params[:event_id])
-    if event.update_attributes(params[:event])
-     redirect_to :action => 'event', :menu => "event_show", :event_id => event.id
+    @event = Event.find(params[:event_id])
+    if @event.update_attributes(params[:event])
+      flash[:notice] = 'イベント情報の更新に成功しました。'
+      redirect_to :action => 'event_show', :event_id => event.id
     else
-      @menu = "event_edit"
-      render :partial => "event_edit", :layout => true
+      render :action => 'event_edit'
     end
   end
 
@@ -561,14 +555,14 @@ class GroupController < ApplicationController
     else
       flash[:notice] = 'イベントの削除に失敗しました。'
     end
-    redirect_to :action => 'event', :menu => 'event_list'
+    redirect_to :action => 'event'
   end
 
   def event_close
     event = Event.find(params[:event_id])
     event.update_attributes(:acceptable => false)
     flash[:notice] = "締め切りました"
-    redirect_to :action => "event", :menu => "event_show", :event_id => event.id
+    redirect_to :action => "event_show", :event_id => event.id
   end
 
   # 締切解除（管理者のみ）
@@ -576,7 +570,7 @@ class GroupController < ApplicationController
     event = Event.find(params[:event_id])
     event.update_attributes(:acceptable => true)
     flash[:notice] = "締め切りを解除しました"
-    redirect_to :action => "event", :menu => "event_show", :event_id => event.id
+    redirect_to :action => "event_show", :event_id => event.id
   end
 
   # キャンセル(締め切り後)
@@ -584,7 +578,7 @@ class GroupController < ApplicationController
     change_attend_state(params[:user_id], params[:event_date_id], "absence",params[:event_id])
 
     flash[:notice] = "キャンセルしました。"
-    redirect_to :action => "event", :menu => "event_show", :event_id => params[:event_id]
+    redirect_to :action => "event_show", :event_id => params[:event_id]
   end
 
   # 管理者に設定する
@@ -594,14 +588,14 @@ class GroupController < ApplicationController
   # failure = もとの画面を表示
   def event_assign_user
     if event = Event.find_by_id(params[:event_id])
-    if params[:owner]
+    if params[:owner] == "true"
       EventOwner.destroy_all(["event_id = ? and user_id = ?",event.id,params[:user_id]])
     else
       EventOwner.create(:event_id => event.id, :user_id => params[:user_id])
     end
     flash[:notice] = "管理者情報を変更しました。"
     end
-    redirect_to :action => 'event', :menu => 'event_users', :event_id => event.id
+    redirect_to :action => 'event_users', :event_id => event.id
   end
  
   def fix_date
@@ -643,7 +637,7 @@ class GroupController < ApplicationController
       flash[:notice] = "確定に失敗しました"
     end
 
-    redirect_to :action => "event", :menu => "event_show", :event_id => event.id
+    redirect_to :action => "event_show", :event_id => event.id
   end
 
   # 削除（管理者のみ）
@@ -652,7 +646,7 @@ class GroupController < ApplicationController
     EventDate.find(params[:event_date_id]).destroy
     event.save #eventのupdated_onを更新するためにeventをsaveする(キャッシュ生成用)
     flash[:notice] = "候補日を削除しました"
-    redirect_to :action => "event", :menu => "event_show", :event_id => event.id
+    redirect_to :action => "event_show", :event_id => event.id
   end
 
   # 出席
@@ -732,7 +726,7 @@ class GroupController < ApplicationController
       event.save #eventのupdated_onを更新するために@eventをsaveする(キャッシュ生成用)
     end
 
-    redirect_to :action => "event", :menu => "event_show",:event_id => event.id
+    redirect_to :action => "event_show",:event_id => event.id
 
   end
 
@@ -750,7 +744,7 @@ private
     @tab_menu_source << ['管理', 'manage'] if participating? and @participation.owned?
     @tab_menu_source << ['イベント','event']
     @tab_menu_option = { :gid => @group.gid }
-#    @tab_menu_option << { :menu => 'event_list' } 
+
   end
 
   def load_group_and_participation
@@ -854,7 +848,7 @@ private
         date = EventDate.new(:start_time => event_start, :end_time => event_end )
         # 開始時刻は終了時刻以前か
         if date.start_time >= date.end_time
-          event.errors.add("候補日(#{index})の終了時刻", "は開始時刻以降の時間を設定してください")
+          event.errors.add("候補日(#{index + 1})の終了時刻", "は開始時刻以降の時間を設定してください")
         end
         # 同一の候補日を指定していないか
         if last_join_dates.include?(date.start_time.to_s + date.end_time.to_s)
@@ -862,17 +856,12 @@ private
         end
         last_join_dates << date.start_time.to_s + date.end_time.to_s
       else
-        event.errors.add nil, "開催日/候補日#{index}に指定した存在しない日付を変換しました"
+        event.errors.add nil, "開催日/候補日#{index + 1}に指定した存在しない日付を変換しました"
       end
       index = index + 1
     end
 
     event.errors.empty?
-  end
-
-  def sort_types
-    [ ['イベントに参加した順', "join"],
-      ["社員番号順", "code"] ]
   end
 
 end

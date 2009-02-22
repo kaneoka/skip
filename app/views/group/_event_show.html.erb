@@ -6,7 +6,7 @@
       <div class="box_space_title">メニュー</div>
       <div class="box_space_body">
         <ul>
-	  <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
+	  <% get_events_menu_items(@controller.action_name,@participation).each do |menu_item| %>
           <li><%= menu_item %></li>
           <% end %>
         </ul>
@@ -22,7 +22,7 @@
       <h1 id="title" hight="10px"><%= event_link_to @event %>
       <span style="font-size: 12px; padding-left: 20px;">
       <% if @event.owner?(session[:user_id]) %>
-      <% get_event_manage_menu_items(@menu,@event.id).each do |menu_item| %>
+      <% get_event_manage_menu_items(@controller.action_name,@event.id).each do |menu_item| %>
       <%= menu_item %>
       <% end %>
       <% end %>
@@ -55,7 +55,7 @@
   <div class="event_info_space">
     <h2 class="topix_title"><%= icon_tag('asterisk_orange') %>開催日/候補日の調整</h2>
       <div id="admin_menu" style="margin-top: 5px; padding: 5px; font-weight: bold;">
-	<%= link_to("[みんなの出席状況を見る]", :action => :event, :menu => :event_users, :event_id => @event.id ) %>
+	<%= link_to("[みんなの出席状況を見る]", :action => :event_users, :event_id => @event.id ) %>
       </div>
     <div class="event_info_space_desc">
       <table style="width: 100%; border: 1px sold silver" id="event_dates">

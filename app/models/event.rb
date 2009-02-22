@@ -15,7 +15,6 @@ class Event < ActiveRecord::Base
       "name" => "名前",
       "description" => "説明",
       "place" => "場所",
-      "capacity" => "最大参加人数",
     }
     def human_attribute_name(attribute_key_name)
       HUMANIZED_ATTRIBUTE_KEY_NAMES[attribute_key_name] || super
@@ -79,13 +78,14 @@ class Event < ActiveRecord::Base
     result
   end
 
-  def event_admin_users
-    admin_users = []
-    self.event_owners.each do |users|
-      admin_users << users.user.name 
-    end
-    admin_users.join(" , ")
-  end
+#   def event_admin_users
+#     admin_users = []
+#     self.event_owners.each_with_index do |users, index|
+#       admin_users << users.user.name 
+#       break if index >= 4
+#     end
+#     admin_users.join(" , ")
+#   end
 
   #確定日があるかどうか
   def date_fixed?

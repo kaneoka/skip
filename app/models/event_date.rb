@@ -1,4 +1,4 @@
-# -*- coding: undecided -*-
+# -*- coding: utf-8 -*-
 class EventDate < ActiveRecord::Base
   has_many :event_attendees, :dependent => :destroy
 

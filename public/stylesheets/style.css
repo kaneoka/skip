@@ -85,7 +85,8 @@ table.normal th {
   background-color: #f0f0ff;
 }
 table.normal td.line_0, table.normal tr.line_0 {
-  background-color: #f8f8ff;
+#  background-color: #f8f8ff;
+  background-color: #FFF0F5;
 }
 table.normal td.line_1, table.normal tr.line_1 {
   background-color: #ffffff;
@@ -831,8 +832,9 @@ table.event_list_box th {
   background-color: #f0f0ff;
   padding: 5px;
   border: 1px solid silver;
-  width: 10%; 
+  width: 10%;
 }
 table.event_list_box td {
   padding: 0px 5px;
+
 }

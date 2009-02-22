@@ -6,7 +6,7 @@
       <div class="box_space_title">メニュー</div>
       <div class="box_space_body">
         <ul>
-	  <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
+	  <% get_events_menu_items(@controller.action_name,@participation).each do |menu_item| %>
           <li><%= menu_item %></li>
           <% end %>
         </ul>
@@ -23,8 +23,7 @@
     </div>
     
 <div class="search_cond_space">
-  <% form_tag({:action => "event" }, :method => 'get') do %>
-  <%= hidden_field_tag("menu","event_users") %>
+  <% form_tag({:action => "event_users" }, :method => 'get') do %>
   <%= hidden_field_tag("event_id", @event.id) %>
 <table class="search_cond_box">
   <tr>
@@ -52,7 +51,7 @@
 
 <div class="search_result_space">
   
-<div class="desc" style="margin-bottom: 10px;">この画面では、管理者の権限設定をすることが可能です。</div>
+<div class="desc" style="margin-bottom: 10px;">この画面では、幹事の設定をすることが可能です。</div>
 
   <% if @pages and @pages.item_count > 0 %>
   
@@ -72,15 +71,15 @@
 <% even_or_odd = 1 - even_or_odd %>
  <tr>
    <td class="line_<%= even_or_odd %>">
-     <% if session[:user_id] == user.id %>
+     <% if @current_user.id == user.id %>
        <% if @event.owner?(user.id) %>
          管理者
        <% else %>
          参加者
        <% end %>
      <% else %>
-       <% if @event.owner?(session[:user_id]) %>
-         <%= check_box_tag("manager_#{index}", "true", @event.owner?(user.id),
+       <% if @event.owner?(@current_user.id) %>
+         <%= check_box_tag("manager_#{index}", true, @event.owner?(user.id),
            {:onclick => "document.location.href='#{url_for(:action => :event_assign_user, :event_id => @event.id, :owner => "#{@event.owner?(user.id)}", :user_id => user.id) }'"}) %>
        <% else %>    
          <%= @event.owner?(user.id) ? "管理者" : "参加者" %>    
@@ -91,8 +90,8 @@
 
         <% @event.event_dates.each do |date| %>
         <% span_id = "attendee_state_[#{@event.id}][#{date.id}][#{user.id}]" %>
-        <% editable = @owner || user.id == session[:user_id] %>
-        <td>
+        <% editable = @owner || user.id == @current_user.id %>
+   <td class="line_<%= even_or_odd %>">
           <span id="<%= span_id %>"><%= show_attendees_state(date, @attendees_hash[date.id][user.id]) %></span>
             <% if editable %>
               <%= generate_attendee_menu({:event => @event,

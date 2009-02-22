@@ -6,7 +6,7 @@
       <div class="box_space_title">メニュー</div>
       <div class="box_space_body">
         <ul>
-	  <% get_events_menu_items(@menu,@participation).each do |menu_item| %>
+	  <% get_events_menu_items(@controller.action_name,@participation).each do |menu_item| %>
           <li><%= menu_item %></li>
           <% end %>
         </ul>
@@ -28,7 +28,7 @@
   </div><!-- contents_left -->
 
   <div id="contents_right">
-  
+
   <% if @pages and @pages.item_count > 0 %>
 
     <div class="navi"><%= page_link @pages %></div>
@@ -38,10 +38,10 @@
       <% for event in @events %>
       <% if event.date_fixed? %>
       <tr>
-        <td rowspan="5" bgcolor="lightyellow"><%= event_link_to event %></td>
+        <td rowspan="5" bgcolor="lightyellow" width="250px;"><%= event_link_to event %></td>
       <tr>
         <th>開催日時</th>
-        <td><%=h event.date_fixed? ? event.holdingDatetime : "開催日が確定していません" %></td>
+        <td width="500px;"><%=h event.date_fixed? ? event.holdingDatetime : "開催日が確定していません" %></td>
       </tr>
       <tr>
         <th >場所</th>
@@ -49,7 +49,9 @@
       </tr>
       <tr>
         <th>幹事</th>
-        <td><%= event.event_admin_users %></td>
+        <td>
+	  <%= show_event_admin_users event %>
+	</td>
       </tr>
       <tr>
         <th>出席人数</th>
@@ -68,26 +70,28 @@
       <% for event in @events %>
       <% unless event.date_fixed? %>
       <tr>
-        <td width="30%" rowspan="5" bgcolor="pink"><%= event_link_to event %></td>
-      </tr>
+        <td rowspan="5" bgcolor="pink" width="250px;"><%= event_link_to event %></td>
       <tr>
-        <th width="10%">開催日時</th>
-        <td width="75%"><%=h event.date_fixed? ? event.holdingDatetime : "開催日が確定していません" %></td>
+        <th> 開催日時</th>
+        <td width="100%;"><%=h event.date_fixed? ? event.holdingDatetime : "開催日が確定していません" %></td>
       </tr>
       <tr>
         <th >場所</th>
-        <td><div class="hiki_style"><%=h event.place %></td>
+        <td><div class="hiki_style"><%= event.place %></td>
       </tr>
       <tr>
         <th>幹事</th>
-        <td><%=h event.event_admin_users %></td>
+	<td>
+	  <%= show_event_admin_users event %>
+	</td>
       </tr>
       <tr>
         <th>出席人数</th>
 	<td><% if event.date_fixed? %>
-	  <%=h event.holding_date.event_attendees.select{|at| at.state == "attend" }.size %>人
+	  <%= event.holding_date.event_attendees.select{|at| at.state == "attend" }.size %>人
 	  <% end %>
 	</td>
+      </tr>
       </tr>
       <% end %>
       <% end %>

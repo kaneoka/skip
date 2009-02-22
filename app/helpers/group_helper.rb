@@ -37,7 +37,10 @@ module GroupHelper
  ###イベントに関するhelper
 
   def generate_event_visitor_state event, participation, owner, user_id
-    state = "<div style='margin-top:5px;margin-bottom: 5px;'>"    
+
+    return if event.past_event?
+
+    state = "<div style='margin-top:5px;margin-bottom: 5px;'>"
 
     if participation == nil and event.acceptable
       state << icon_tag('key') + "このイベントは参加するには事前にグループへの参加が必須です。"
@@ -47,27 +50,29 @@ module GroupHelper
       state << "</div>"
       return state
     end
-
-    if event.holding_date
-      unless ea = EventAttendee.find_by_event_date_id_and_user_id(event.holding_date.id, user_id)
-        state << icon_tag('lightbulb') + "開催日の出欠情報が入力されていません。入力してください。"
-      else
-        if ea.state == "pending"
-          state << icon_tag('lightbulb') + "開催日の出欠情報が入力されていません。入力してください。"
+    
+    if event.acceptable
+      if event.holding_date
+        unless ea = EventAttendee.find_by_event_date_id_and_user_id(event.holding_date.id, user_id)
+          state << icon_tag('lightbulb') + "開催日の出欠情報が入力されていません。"
+        else
+          if ea.state == "pending"
+            state << icon_tag('lightbulb') + "開催日の出欠情報が入力されていません。"
+          end
         end
-      end
-    else
-      event.event_dates.each do |event_date|
-        unless EventAttendee.find_by_event_date_id_and_user_id(event_date.id, user_id)
-          state << icon_tag('lightbulb') + "出欠情報が入力されていない候補日があります。"
-          break
+      else
+        event.event_dates.each do |event_date|
+          unless EventAttendee.find_by_event_date_id_and_user_id(event_date.id, user_id)
+            state << icon_tag('lightbulb') + "出欠情報が入力されていない候補日があります。"
+            break
+          end
         end
       end
     end
-
+    
     state << "</div>"
 
-    state << "<div style='margin-bottom:5px;'>"
+    state << "<div style='margin-top: 5px;margin-bottom:5px;'>"
 
     if owner
       if event.acceptable
@@ -79,7 +84,7 @@ module GroupHelper
           state << icon_tag('cut') + generate_owner_menus(event)
         end
       else
-          state << icon_tag('lightbulb') + "出欠登録を締め切りを解除することができます。"
+          state << icon_tag('lightbulb') + "出欠登録の締め切りを解除することができます。"
           state << "</div><div style='margin-left:25px;'>"
           state << icon_tag('cut') + generate_owner_menus(event)
       end
@@ -93,14 +98,23 @@ module GroupHelper
   def generate_event_informations event, participation, owner
     informations = []
 
-    informations = "<div style='margin-top:5px;margin-bottom: 5px;'>"    
+    informations = "<div style='margin-top:5px;margin-bottom: 5px;'>"
 
     if event.past_event?
-      return informations << icon_tag('information') + 'このイベントは過去に開催されました'
+      informations << icon_tag('information') + 'このイベントは過去に開催されました'
+      informations << "</div>"
+      return informations
     end
     
     if event.acceptable
       if event.holding_date
+        informations << "</div><div style='margin-top:5px;margin-bottom: 5px;'>"
+        informations << icon_tag('information') + "開催日が確定済みです"
+      else
+        unless owner
+          informations << "</div><div style='margin-top:5px;margin-bottom: 5px;'>"
+          informations << icon_tag('information') + "開催日が確定していません。"
+        end
       end
     else
       informations << "</div><div style='margin-top:5px;margin-bottom: 5px;'>"    
@@ -113,7 +127,7 @@ module GroupHelper
   end
 
   def get_events_menu_items selected_menu, participation
-    menus = [{:name => "イベントの一覧", :menu => "event_list" }]
+    menus = [{:name => "イベントの一覧", :menu => "event" }]
     menus << {:name => "イベントの新規作成", :menu => "event_new" } if participation and participation.waiting != true
 
     menu_items = []
@@ -121,7 +135,7 @@ module GroupHelper
       if menu[:menu] == selected_menu
         menu_items << icon_tag('bullet_red') + "<b>#{menu[:name]}</b>"
       else
-        link_to_params = { :action => "event", :menu => menu[:menu] }
+        link_to_params = { :action => menu[:menu] }
         menu_items << icon_tag('bullet_blue') + link_to(menu[:name], link_to_params, :confirm => menu[:confirm])
       end
     end
@@ -136,12 +150,14 @@ module GroupHelper
       if menu[:menu] == selected_menu
         menu_items << "<b>#{menu[:name]}</b>"
       else
-        link_to_params = { :action => "event", :menu => menu[:menu], :event_id => event_id }
+        link_to_params = { :action => menu[:menu], :event_id => event_id }
         menu_items << link_to(menu[:name], link_to_params, :confirm => menu[:confirm])
       end
     end
     menu_items
   end
+
+
 
   # 候補日一覧に表示するメニューを状況に応じて出力する
   # 表示したい文字列を返す
@@ -150,8 +166,10 @@ module GroupHelper
     options.assert_valid_keys [:event, :date, :attendee, :user_id, :owner]
     menu = ""
     if options[:event].acceptable || options[:owner]
+      menu << "<nobr>"
       menu << "<a href=\"#\" id=\"attendee_link_#{options[:event].id}_#{options[:date].id}_#{options[:user_id]}\" class=\"attendee_link\" >[出席]</a>"
       menu << "<a href=\"#\" id=\"absentee_link_#{options[:event].id}_#{options[:date].id}_#{options[:user_id]}\" class=\"absentee_link\" >[欠席]</a>"
+      menu << "</nobr>"
     else
       if options[:attendee] and options[:attendee].state == "attend"
         menu << link_to("[キャンセル]", { :action => :event_cancel, :event_id => options[:event].id, :event_date_id => options[:date].id, :user_id => options[:user_id] },
@@ -213,16 +231,6 @@ module GroupHelper
     menu
   end
 
-#   def user_state owner
-#     output = ""
-#     if owner
-#       output << icon_tag('star') + '幹事'
-#     else
-#       output << icon_tag('user') + '参加者'
-#     end
-#     output
-#   end
-
   # 開催日選択のセレクトボックスに使用する配列を生成する
   def get_date_select_values event
     date_select_values = []
@@ -243,6 +251,42 @@ module GroupHelper
       end
     end
     time_options
+  end
+
+  def show_event_admin_users event
+    limit = 5
+    admin_users = []
+    event.event_owners.each_with_index do |users, index|
+      admin_users << users.user.name 
+      break if index >= (limit - 1)
+    end
+
+     state = "<span style='float: left;'>"
+     state << admin_users.join(" , ")
+     state << "</span>"
+    if event.event_owners.size > limit
+      state << "<span style='float: right;'>"
+      state <<  link_to("[すべてを見る]", :action => "event_users", :event_id => event.id)
+      state << "</span>"
+    end
+    state
+  end
+
+  def show_event_admin_users_link users, event
+    limit = 5
+    admin_users = []
+    users.each_with_index do |user, index|
+      admin_users << user_link_to(user)
+      break if index >= (limit - 1)
+    end
+
+    state = admin_users.join(" , ")
+    if users.size > limit
+      state << "<span style='padding-left:100px;'>"
+      state <<  link_to("[すべてを見る]", :action => "event_users", :event_id => event.id)
+      state << "</span>"
+    end
+    state
   end
 
 end
