@@ -16,14 +16,6 @@ ActionController::Routing::Routes.draw do |map|
               :controller => 'user',
               :defaults => { :action => 'show' }
 ###イベント用に追加
-  map.connect 'group/:gid/event/:menu/:event_id',
-              :controller => 'group', 
-              :action => 'event'
-
-  map.connect 'group/:gid/event/:menu',
-              :controller => 'group', 
-              :action => 'event'
-
   map.connect 'group/:gid/:action/:event_id',
               :controller => 'group',
               :defaults => { :action => 'event' }
